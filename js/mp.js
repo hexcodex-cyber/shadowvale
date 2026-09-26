@@ -32,9 +32,10 @@ async function doAuth(kind){
 }
 function playOffline(){ MP.offline=true; showLogin(false); G.mode='title'; G.menuSel=0; }
 async function afterLogin(){
+  if(MP.loggingIn) return; MP.loggingIn=true;
   showLogin(false); loginMsg('');
   try{ const cloud=await NET.loadSave(); if(cloud) localStorage.setItem(saveKey(), cloud); }catch(e){ console.warn('cloud load failed', e.code||e); toast('Could not load cloud save — using local save','#ffb'); }
-  G.mode='title'; G.menuSel=0; G.player.name=NET.user.name; toast(`Signed in as ${NET.user.name}`,'#8fd0ff');
+  G.mode='title'; G.menuSel=0; G.player.name=NET.user.name; toast(`Signed in as ${NET.user.name}`,'#8fd0ff'); MP.loggingIn=false;
 }
 window.onNetChange = ()=>{ if(!G) return;
   if(G.mode==='login'){ if(NET.user) afterLogin(); else renderLogin(); } };

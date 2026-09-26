@@ -11,7 +11,7 @@ function onKey(e){
   if(G.mode==='title'){ const n=hasSave()?2:1; G.menuSel=(G.menuSel+vert(c)+n)%n;
     if(isConfirm(c)){ if(hasSave()&&G.menuSel===0){ loadGame(); toast('Welcome back!'); } else { G.mode='starter'; G.menuSel=0; } } return; }
   if(G.mode==='starter'){ G.menuSel=(G.menuSel+horiz(c)+3)%3;
-    if(isConfirm(c)){ const sp=['Emberpup','Tidefin','Sproutle'][G.menuSel]; const keepSel=0; const name=G.player.name; G=newState(); G.player.name=name; G.mode='world'; G.menuSel=keepSel; addCreature(makeCreature(sp,5));
+    if(isConfirm(c)){ const sp=['Emberpup','Tidefin','Sproutle'][G.menuSel]; const keepSel=0; const name=(window.NET&&NET.user&&NET.user.name)||G.player.name; G=newState(); G.player.name=name; G.mode='world'; G.menuSel=keepSel; addCreature(makeCreature(sp,5));
       showDialog('Elder Maren',[`${sp} has chosen you! Welcome to Brightvale, young tamer.`,'Come speak with me — I am just west of here, in front of my hall.','(Controls: WASD/Arrows to move, E to talk, T for talents, P party, Q quests, B bag)']); saveGame(); } return; }
   if(G.mode==='win'){ if(isConfirm(c)) G.mode='world'; return; }
   if(G.mode==='battle') return battleKey(c);

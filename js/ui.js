@@ -29,7 +29,7 @@ function drawHUD(){
   const p=G.player;
   // player panel
   panel(10,10,250,112);
-  text(`${p.name}`,22,34,{size:18,bold:true}); text(`Lv ${p.level}`,248,34,{size:18,bold:true,color:'#ffd84a',align:'right'});
+  text(p.name.length>14?p.name.slice(0,13)+'…':p.name,22,34,{size:18,bold:true}); text(`Lv ${p.level}`,248,34,{size:18,bold:true,color:'#ffd84a',align:'right'});
   bar(22,42,226,10,p.level>=MAX_PLAYER_LEVEL?1:p.xp/playerXpNeed(p.level),'#b26cff');
   text(p.level>=MAX_PLAYER_LEVEL?'MAX LEVEL':`XP ${p.xp}/${playerXpNeed(p.level)}`,135,66,{size:12,align:'center',color:'#ddd'});
   text(`💰 ${p.gold}g`,22,88,{size:15,color:'#ffd84a'}); text(`◈ ${G.shards.length}/3`,120,88,{size:15,color:'#ff9ad0'}); text(`✦ ${G.relics.length}/8`,190,88,{size:15,color:'#9ae6ff'});

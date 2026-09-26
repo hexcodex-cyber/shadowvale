@@ -40,7 +40,7 @@ async function boot(){
     let presRef=null, lastPres=null, lastSent=0, pending=null, timer=null, unsubs=[], saveTimer=null;
 
     NET.signInEmail = (email,pw)=>A.signInWithEmailAndPassword(auth,email,pw);
-    NET.signUpEmail = async(email,pw,name)=>{ const c=await A.createUserWithEmailAndPassword(auth,email,pw); await A.updateProfile(c.user,{displayName:(name||'').trim().slice(0,20)||email.split('@')[0]}); setUser(c.user); return c; };
+    NET.signUpEmail = async(email,pw,name)=>{ NET._pendingName=(name||'').trim().slice(0,20); const c=await A.createUserWithEmailAndPassword(auth,email,pw); await A.updateProfile(c.user,{displayName:(name||'').trim().slice(0,20)||email.split('@')[0]}); setUser(c.user); return c; };
     NET.signInGoogle = ()=>A.signInWithPopup(auth,new A.GoogleAuthProvider());
     NET.signOut = async()=>{ try{ if(presRef) await remove(presRef); }catch(e){} await A.signOut(auth); };
     NET.loadSave = async()=>{ if(!NET.user) return null; const s=await get(ref(db,`users/${NET.user.uid}/save`)); return s.exists()?s.val():null; };
@@ -56,7 +56,7 @@ async function boot(){
     NET.bossDamage = n=>{ runTransaction(ref(db,'worldboss'),b=>{ if(!b||b.hp<=0) return b; b.hp=Math.max(0,b.hp-n); b.hits=(b.hits||0)+1; if(b.hp===0){ b.defeatedBy=NET.user.name; b.defeatedAt=Date.now(); } return b; }).catch(e=>console.warn('boss',e.code||e)); };
     NET.resetBoss = max=>{ runTransaction(ref(db,'worldboss'),b=>{ if(b && b.hp>0) return b; return {hp:max,max,hits:0,spawnedAt:Date.now()}; }).catch(e=>console.warn('boss reset',e.code||e)); };
 
-    function setUser(u){ NET.user = u ? {uid:u.uid, name:(u.displayName||(u.email||'Tamer').split('@')[0]).slice(0,20), email:u.email} : null; }
+    function setUser(u){ NET.user = u ? {uid:u.uid, name:(u.displayName||NET._pendingName||(u.email||'Tamer').split('@')[0]).slice(0,20), email:u.email} : null; if(u && window.G && G.player && G.mode!=='login') G.player.name=NET.user.name; }
     A.onAuthStateChanged(auth, u=>{
       unsubs.forEach(f=>f()); unsubs=[]; NET.players={}; NET.chat=[]; presRef=null; NET.online=false;
       setUser(u);
