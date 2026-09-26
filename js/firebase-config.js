@@ -1,12 +1,10 @@
 // ===== Shadowvale: Firebase configuration (the ONLY place the config lives) =====
-// Paste the config object from Firebase console → Project settings → Your apps → Web app.
-// While apiKey still starts with "YOUR_", the game runs in offline mode (no errors).
 window.FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:0000000000000000"
+  apiKey: "AIzaSyC9RaFmVvIGiIEPTP8aRIR-c_XDVgW9KYQ",
+  authDomain: "pokemon-world-of-warcraft-game.firebaseapp.com",
+  databaseURL: "https://pokemon-world-of-warcraft-game-default-rtdb.firebaseio.com",
+  projectId: "pokemon-world-of-warcraft-game",
+  storageBucket: "pokemon-world-of-warcraft-game.firebasestorage.app",
+  messagingSenderId: "739636877487",
+  appId: "1:739636877487:web:de960628835b42e78d1c5a"
 };
