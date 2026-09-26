@@ -99,6 +99,7 @@ function addCreature(c){
 
 // ---------- Save / load ----------
 const SAVE_KEY='shadowvale-save-v1';
-function saveGame(){ try{ if(G && G.party.length) localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, G, {mode:'world', dialog:null, battle:null, menu:null}))); }catch(e){} }
-function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
-function loadGame(){ const d = JSON.parse(localStorage.getItem(SAVE_KEY)); G = Object.assign(newState(), d); G.mode='world'; G.player.moving=false; G.cooldowns={}; G.camoUntil=0; }
+function saveKey(){ return SAVE_KEY + (window.NET && NET.user ? '-'+NET.user.uid : ''); }
+function saveGame(){ try{ if(G && G.party.length && G.mode!=='login' && G.mode!=='title' && G.mode!=='starter'){ const j=JSON.stringify(Object.assign({}, G, {mode:'world', dialog:null, battle:null, menu:null})); localStorage.setItem(saveKey(), j); if(window.NET && NET.user) NET.writeSave(j); } }catch(e){ console.warn('save failed',e); } }
+function hasSave(){ try{ return !!localStorage.getItem(saveKey()); }catch(e){ return false; } }
+function loadGame(){ const d = JSON.parse(localStorage.getItem(saveKey())); G = Object.assign(newState(), d); G.mode='world'; G.player.moving=false; G.cooldowns={}; G.camoUntil=0; if(window.NET && NET.user) G.player.name=NET.user.name; }

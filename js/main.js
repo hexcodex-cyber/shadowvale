@@ -15,7 +15,7 @@ function tileAt(x,y){ if(x<0||y<0||x>=MAP_W||y>=MAP_H) return 'T'; if(x===47&&y=
 const npcAt=(x,y)=>NPCS.find(n=>n.x===x&&n.y===y);
 const guardianAt=(x,y)=>GUARDIANS.find(g=>g.x===x&&g.y===y&&!G.flags['g_'+g.id]);
 const lambAt=(x,y)=>WORLD.lambs.findIndex(([lx,ly],i)=>lx===x&&ly===y&&!G.lambs.includes(i));
-function blocked(x,y){ const t=tileAt(x,y); if(SOLID.has(t)) return true; if(npcAt(x,y)||guardianAt(x,y)) return true; if(lambAt(x,y)>=0) return true; return false; }
+function blocked(x,y){ const t=tileAt(x,y); if(SOLID.has(t)) return true; if(npcAt(x,y)||guardianAt(x,y)) return true; if(x===RIFT.x&&y===RIFT.y&&riftActive()) return true; if(lambAt(x,y)>=0) return true; return false; }
 function warpTo(x,y){ const p=G.player; p.tx=p.x=p.fromX=x; p.ty=p.y=p.fromY=y; p.moving=false; }
 
 // ---------------- toasts / dialog ----------------
@@ -78,6 +78,7 @@ function interact(){
   const g=guardianAt(fx,fy);
   if(g){ if(!g.final && mainStage()<1){ showDialog(g.sp,['A mighty guardian slumbers here. Perhaps speak with Elder Maren first.']); return; }
     showDialog(g.sp,[g.line, `(Recommended level: ${g.level}+. Your lead: ${G.party[0].sp} Lv ${G.party[0].level})`],null,{options:['Fight!','Not yet'],cb:i=>{ if(i===0){ if(!partyAlive().length){showDialog('',['Your creatures are too tired to fight. Heal at the Inn.']);return;} startBattle(makeCreature(g.sp,g.level),{guardian:g}); } }}); return; }
+  if(fx===RIFT.x&&fy===RIFT.y&&riftActive()){ showDialog('Riftmaw',[RIFT.line,`Shared HP: ${NET.boss.hp}/${NET.boss.max}. Every hit you land is subtracted for everyone.`],null,{options:['Fight!','Not yet'],cb:i=>{ if(i===0){ if(!partyAlive().length){showDialog('',['Your creatures are too tired to fight.']);return;} startBattle(makeCreature(RIFT.sp,RIFT.level),{guardian:RIFT}); } }}); return; }
   const li=lambAt(fx,fy); if(li>=0){ G.lambs.push(li); toast(`🐑 Lamb found! (${G.lambs.length}/3) It trots home.`,'#fff',4); burst(W/2,H/2,'#fff'); checkQuestToasts(); saveGame(); return; }
   const t=tileAt(fx,fy);
   if(t==='S'){ const s=WORLD.signs.find(s=>s.x===fx&&s.y===fy); showDialog('Signpost',[s.text]); return; }
@@ -115,6 +116,7 @@ function useAbility(id){
 
 // ---------------- update ----------------
 function update(dt){
+  mpUpdate(dt);
   G.time+=dt; toasts.forEach(t=>t.life-=dt); toasts=toasts.filter(t=>t.life>0); updParticles(dt);
   if(G.battle){ const b=G.battle; b.t+=dt; b.shake.p=Math.max(0,b.shake.p-dt); b.shake.e=Math.max(0,b.shake.e-dt); b.flash=Math.max(0,b.flash-dt); b.intro=Math.max(0,b.intro-dt*2); }
   if(G.mode!=='world' || G.dialog || G.menu) return;

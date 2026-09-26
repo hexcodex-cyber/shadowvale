@@ -14,6 +14,7 @@ function drawWorld(){
   WORLD.petals.forEach(([x,y],i)=>{ if(!G.petals.includes(i) && G.quests.petals!=='done'){ const px=x*TILE-ox, py=y*TILE-oy; ctx.fillStyle=`rgba(120,200,255,${0.6+0.3*Math.sin(t*3+i)})`; for(let k=0;k<5;k++){ctx.beginPath();ctx.arc(px+16+Math.cos(k*1.26)*5,py+16+Math.sin(k*1.26)*5,4,0,7);ctx.fill();} ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(px+16,py+16,3,0,7); ctx.fill(); if(tracker) sparkle(x,y,'#8fd0ff',true);} });
   WORLD.lambs.forEach(([x,y],i)=>{ if(!G.lambs.includes(i)){ drawCreature('Fluffwool',x*TILE-ox+16,y*TILE-oy+16,26,{t,shadow:true}); if(tracker) sparkle(x,y-0.6,'#fff',true);} });
   GUARDIANS.forEach(g=>{ if(!G.flags['g_'+g.id]){ const px=g.x*TILE-ox+16, py=g.y*TILE-oy+10; drawCreature(g.sp,px,py,g.final?64:52,{t}); text('!',px,py-36,{size:20,bold:true,color:'#ff5',align:'center'}); } });
+  drawRift(ox,oy); drawRemotePlayers(ox,oy);
   NPCS.forEach(n=>{ drawPerson(n.x*TILE-ox,n.y*TILE-oy,n.color,n.hat,'down'); const q=SIDE_QUESTS.find(q=>q.giver===n.id && G.quests[q.id]!=='done' && (!q.after||G.quests[q.after]==='done'));
     let mark=null; if(n.id==='elder' && mainStage()===0) mark='!'; else if(q){ if(!G.quests[q.id]) mark='!'; else if(q.progress(G)>=q.goal) mark='?'; }
     if(mark) text(mark,n.x*TILE-ox+16,n.y*TILE-oy-8,{size:22,bold:true,color:mark==='?'?'#4cd964':'#ffd84a',align:'center'}); });
@@ -58,8 +59,9 @@ function drawHUD(){
   if(G.time<G.camoUntil) text(`🍃 Camouflaged ${Math.ceil(G.camoUntil-G.time)}s`,W/2,H-94,{size:14,bold:true,align:'center',color:'#7be07b'});
   // minimap
   drawMinimap(W-138,H-102,128,88);
+  drawOnlinePanel(); drawChat();
   // key hints
-  panel(10,H-40,300,30,0.7); text('WASD move · E talk · T talents · P party · Q quests · B bag',20,H-20,{size:11,color:'#ddd'});
+  panel(10,H-40,300,30,0.7); text(window.NET&&NET.user?'E talk · Enter chat · T talents · P party · Q quests · Esc menu':'WASD move · E talk · T talents · P party · Q quests · Esc menu',20,H-20,{size:11,color:'#ddd'});
   // zone
   text(ZONE_NAMES[G.zone]||'',W-74,H-108,{size:12,align:'center',color:'#ffe9a8'});
 }
@@ -189,6 +191,7 @@ function drawBattle(){
   bar(126,72,228,12,e.hp/e.maxhp,hpColor(e.hp/e.maxhp)); if(G.dex.caught[e.sp]) text('●',360,104,{size:12,color:'#ff5050',align:'right'});
   const st=(s)=>[s.atk&&`ATK${s.atk>0?'+':''}${s.atk}`,s.def&&`DEF${s.def>0?'+':''}${s.def}`].filter(Boolean).join(' ');
   text(st(b.stages.e),56,106,{size:12,color:'#ffb'});
+  if(b.guardian && b.guardian.world && window.NET && NET.boss){ panel(390,30,250,40); text(`🌐 Shared HP ${NET.boss.hp}/${NET.boss.max}`,402,48,{size:12,bold:true,color:'#e0c0ff'}); bar(402,54,226,8,NET.boss.hp/NET.boss.max,'#b26cff'); }
   // player panel
   panel(W-380,300,350,108); text(p.sp,W-364,328,{size:20,bold:true}); text(`Lv ${p.level}`,W-46,328,{size:18,bold:true,align:'right',color:'#ffd84a'}); typeBadge(SPECIES[p.sp].type,W-364,338);
   bar(W-294,342,248,12,p.hp/p.maxhp,hpColor(p.hp/p.maxhp)); text(`${p.hp}/${p.maxhp}`,W-46,372,{size:14,align:'right'});
@@ -225,13 +228,15 @@ function drawBattle(){
 }
 
 // ---------------- Title / starter / win ----------------
-function drawTitle(){
+function drawTitle(bgOnly){
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#1a0f2e'); g.addColorStop(1,'#3a2060'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   for(let i=0;i<60;i++){ ctx.fillStyle=`rgba(255,255,255,${0.3+0.3*Math.sin(G.time*2+i)})`; ctx.fillRect((i*137)%W,(i*71)%300,2,2); }
   drawCreature('Umbrax',W/2,250,200,{t:G.time,alpha:0.5});
   text('SHADOWVALE',W/2,130,{size:64,bold:true,align:'center',color:'#ffd84a'}); text('Tamers of the Shadow Wyrm',W/2,170,{size:20,align:'center',color:'#e0c0ff'});
+  if(bgOnly) return;
   const opts=hasSave()?['Continue','New Game']:['New Game']; opts.forEach((o,i)=>{ rr(W/2-120,400+i*56,240,44,10,G.menuSel===i?'#5a4a8a':'#2a2540','#c8a458',2); text(o,W/2,428+i*56,{size:20,bold:true,align:'center'}); });
   text('Arrows + Enter · A Pokémon-style adventure with a World of Warcraft talent tree',W/2,H-30,{size:13,align:'center',color:'#aaa'});
+  text(window.NET&&NET.user?`🌐 Signed in as ${NET.user.name} — cloud save & shared world enabled`:'⚪ Offline mode — progress saved in this browser only',W/2,H-56,{size:14,align:'center',color:window.NET&&NET.user?'#9ae6ff':'#ccc'});
 }
 function drawStarter(){
   ctx.fillStyle='#1d1830'; ctx.fillRect(0,0,W,H); text('Choose your first companion',W/2,80,{size:30,bold:true,align:'center',color:'#ffd84a'});

@@ -77,7 +77,7 @@ function performMove(side, move){
   }
   const r = calcDamage(att,def,move,me.atk,them.def,isP,b);
   if(isP && b.unleash) b.unleash=false;
-  out.push({fn:()=>{ def.hp=Math.max(0,def.hp-r.dmg); b.shake[isP?'e':'p']=0.45; b.flash=0.15;
+  out.push({fn:()=>{ if(isP && b.guardian && b.guardian.world && window.NET) NET.bossDamage(Math.min(r.dmg,def.hp)); def.hp=Math.max(0,def.hp-r.dmg); b.shake[isP?'e':'p']=0.45; b.flash=0.15;
     if(mv.effect==='drain') att.hp=Math.min(att.maxhp, att.hp+Math.ceil(r.dmg/2));
     burst(isP? 700:250, isP? 190:360, TYPE_COLORS[mv.type], 18);
     const t=[]; if(r.unleashed) t.push({text:'PRIMAL UNLEASH! Double damage!'}); if(r.crit) t.push({text:'A critical hit!'});
@@ -172,6 +172,7 @@ function endBattle(result){
     showDialog('Innkeeper Rosa',[`You blacked out and dropped ${lost} gold...`,'I patched up your creatures. Be careful out there, dear!']);
   }
   if(result==='win' && b.wild){ G.wildWins++; }
-  if(result==='win' && b.guardian){ onGuardianDefeated(b.guardian); }
+  if(result==='win' && b.guardian && b.guardian.world){ showDialog('Riftmaw',['The Riftmaw retreats into the rift, wounded! Your damage was added to the shared pool.', NET.boss?`Shared HP left: ${NET.boss.hp}/${NET.boss.max}`:'']); }
+  else if(result==='win' && b.guardian){ onGuardianDefeated(b.guardian); }
   checkQuestToasts(); saveGame();
 }

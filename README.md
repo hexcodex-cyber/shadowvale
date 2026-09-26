@@ -14,6 +14,15 @@ A browser game that mixes Pokémon-style creature taming with World of Warcraft-
   - Battle actives, once per battle from the Ability menu: Rallying Cry, Primal Unleash, Soul Snare.
 - **Creatures** level up and learn moves from their learnsets ("✨ X learned Y!"). If a creature already knows 4 moves, a prompt lets you pick one to forget or skip the new move.
 
+## Multiplayer (Firebase)
+- **Login screen:** sign in with email and password, create an account (you choose a tamer name), or **Continue with Google**. **Play offline** is always available. If `js/firebase-config.js` still has the placeholder values, only "Multiplayer not configured — play offline" is shown.
+- **Cloud save:** stored at `users/{uid}/save` and mirrored to localStorage.
+- **Shared world:** your presence goes to `presence/{uid}` (at most about 8 updates a second, removed on disconnect). Other players in your zone are drawn with name tags and smooth movement. The top bar shows how many players are online and who is in your zone.
+- **Global chat:** press Enter to type. The last 50 messages are stored.
+- **World boss (Riftmaw):** appears on the east road near (37,24). Every player's damage comes off one shared HP pool. It respawns 2 minutes after it's defeated.
+- **Menu (Esc):** Resume, Save, and Sign out.
+- See `FIREBASE_SETUP.md` and `database.rules.json`.
+
 ## Controls
 WASD/Arrows move · E/Space talk/confirm · Esc back · T talents · P party (Enter = set lead, H = potion) · Q quests · B bag/bestiary/collection · 1/2/3 abilities. Mouse works in the talent tree. The game autosaves to localStorage.
 
@@ -26,4 +35,5 @@ WASD/Arrows move · E/Space talk/confirm · Esc back · T talents · P party (En
 - `js/main.js`: world logic, NPC_TALK, quests, overworld abilities
 - `js/ui.js`: HUD, talent screen, menus, battle UI
 - `js/input.js`: input and main loop
-- Tests (`test/`): `node reach.js` (map reachability), `node play.js` (Playwright playthrough with screenshots in `test/shots/`), `node sim.js` (boss balance sim)
+- `js/firebase-config.js`: the Firebase config · `js/net.js`: Firebase SDK module (window.NET) · `js/mp.js`: login overlay, chat, remote players, world boss
+- Tests (`test/`, serve the folder with `python3 -m http.server 8765` first): `node mp.js` (login screen, offline fallback, mocked multiplayer HUD), `node reach.js` (map reachability), `node play.js` (Playwright playthrough with screenshots in `test/shots/`), `node sim.js` (boss balance sim)

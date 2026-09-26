@@ -3,11 +3,11 @@ const {chromium}=require('playwright-core');
   const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1000,height:680}});
   const errors=[]; page.on('pageerror',e=>errors.push('pageerror: '+e.message)); page.on('console',m=>{ if(m.type()==='error') errors.push('console: '+m.text()); });
-  await page.goto('file://'+__dirname+'/../index.html'); await page.evaluate(()=>localStorage.clear()); await page.reload();
+  await page.goto(process.env.URL||'http://localhost:8765/index.html'); await page.evaluate(()=>localStorage.clear()); await page.reload();
   const shot=async n=>{ await page.waitForTimeout(250); await page.locator('#game').screenshot({path:`shots/${n}.png`}); };
   const key=async(k,n=1,wait=120)=>{ for(let i=0;i<n;i++){ await page.keyboard.press(k); await page.waitForTimeout(wait);} };
   const G=()=>page.evaluate(()=>{ const g=__sv.G; return {mode:g.mode, menu:g.menu, dialog:!!g.dialog, pos:[g.player.tx,g.player.ty], lvl:g.player.level, pts:g.player.points, party:g.party.map(c=>c.sp+':'+c.level+':'+c.moves.join('/')), battle:g.battle&&{menu:g.battle.menu,msg:g.battle.msg}}; });
-  await page.waitForTimeout(500); await shot('01-title');
+  await page.waitForTimeout(500); await page.click('#lg-offline'); await page.waitForTimeout(200); await shot('01-title');
   await key('Enter'); await shot('02-starter'); await key('ArrowRight',2); await key('Enter'); // Sproutle
   console.log('after starter', await G());
   while((await G()).dialog) await key('Space');

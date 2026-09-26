@@ -1,0 +1,33 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "save": { ".validate": "newData.isString() && newData.val().length < 300000" }
+      }
+    },
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "!newData.exists() || (newData.hasChildren(['name','zone','x','y']) && newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('zone').isString() && newData.child('x').isNumber() && newData.child('y').isNumber())"
+      }
+    },
+    "chat": {
+      ".read": "auth != null",
+      ".indexOn": ["ts"],
+      "$msgId": {
+        ".write": "auth != null && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['uid','name','text','ts']) && newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 200 && newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('ts').isNumber() && newData.child('ts').val() <= now"
+      }
+    },
+    "worldboss": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".validate": "newData.hasChildren(['hp','max']) && newData.child('max').isNumber() && newData.child('max').val() <= 100000 && newData.child('hp').isNumber() && newData.child('hp').val() >= 0 && newData.child('hp').val() <= newData.child('max').val() && (!data.exists() || data.child('hp').val() <= 0 || newData.child('hp').val() <= data.child('hp').val())"
+    }
+  }
+}

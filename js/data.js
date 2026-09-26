@@ -72,6 +72,8 @@ const SPECIES = {
               learn:[[1,'Flame Fang'],[1,'Rock Slide'],[1,'Warm Up'],[1,'Inferno']], desc:'Guardian of Ember Cave.'},
   Tidecaller:{type:'Water',  base:{hp:90,atk:70,def:65,spd:55}, catch:0, xp:170, boss:true, look:{body:'#1f5fbf',accent:'#8ff0ff',feat:'fin'},
               learn:[[1,'Tidal Slam'],[1,'Mist Veil'],[1,'Hydro Surge'],[1,'Headbutt']], desc:'Guardian of Mirror Lake.'},
+  Riftmaw:   {type:'Arcane', base:{hp:95,atk:66,def:60,spd:50}, catch:0, xp:200, boss:true, look:{body:'#5b2a9a',accent:'#7ff0ff',feat:'wisp'},
+              learn:[[1,'Mana Burst'],[1,'Nightmare'],[1,'Focus'],[1,'Rock Slide']], desc:'Multiplayer world boss from a tear in reality.'},
   Umbrax:    {type:'Shadow', base:{hp:100,atk:72,def:62,spd:60}, catch:0, xp:300, boss:true, look:{body:'#2a1840',accent:'#ff3fbf',feat:'dragon'},
               learn:[[1,'Void Rend'],[1,'Nightmare'],[1,'Terrify'],[1,'Corrode']], desc:'The Shadow Wyrm. Corrupter of Shadowvale.'},
 };

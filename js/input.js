@@ -7,6 +7,7 @@ function horiz(c){ return (c==='ArrowLeft'||c==='KeyA')?-1:(c==='ArrowRight'||c=
 
 function onKey(e){
   const c=e.code; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(c)) e.preventDefault();
+  if(G.mode==='login') return;
   if(G.mode==='title'){ const n=hasSave()?2:1; G.menuSel=(G.menuSel+vert(c)+n)%n;
     if(isConfirm(c)){ if(hasSave()&&G.menuSel===0){ loadGame(); toast('Welcome back!'); } else { G.mode='starter'; G.menuSel=0; } } return; }
   if(G.mode==='starter'){ G.menuSel=(G.menuSel+horiz(c)+3)%3;
@@ -18,6 +19,8 @@ function onKey(e){
   if(G.dialog){ const d=G.dialog; if(d.choice && d.i===d.lines.length-1){ const h=horiz(c)||vert(c); if(h) d.sel=(d.sel+h+d.choice.options.length)%d.choice.options.length; }
     if(isConfirm(c)) advanceDialog(); else if(isBack(c) && d.choice && d.i===d.lines.length-1){ d.sel=d.choice.options.length-1; advanceDialog(); } return; }
   if(G.menu) return menuKey(c);
+  if(c==='Enter' && window.NET && NET.user){ openChat(); return; }
+  if(c==='Escape'){ G.menu='system'; G.menuSel=0; return; }
   const mv={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'}[c];
   if(mv){ tryMove(mv); return; }
   if(c==='KeyE'||c==='Space'||c==='Enter') interact();
@@ -29,6 +32,7 @@ function onKey(e){
 }
 function menuKey(c){
   const m=G.menu;
+  if(m==='system'){ if(c==='Escape') G.menu=null; else systemKey(c); return; }
   if(isBack(c) && c!=='KeyX' || (m==='talents'&&c==='KeyT') || (m==='party'&&c==='KeyP') || (m==='quests'&&(c==='KeyQ'||c==='KeyJ')) || (m==='bag'&&(c==='KeyB'||c==='KeyI'))){ G.menu=null; return; }
   if(m==='talents'){ if(vert(c)) talentNav(vert(c)<0?'up':'down'); if(horiz(c)) talentNav(horiz(c)<0?'left':'right');
     if(c==='Enter'||c==='Space'||c==='KeyE'){ const t=TALENT_BY_ID[G.talentSel]; if(spendTalent(t)){ const [x,y]=talentNodePos(t); burst(x+32,y+32,TALENTS[t.bi].color); } }
@@ -83,21 +87,26 @@ function frame(ts){
   if(G.mode==='title'||G.mode==='starter') G.time+=dt; else update(dt);
   ctx.clearRect(0,0,W,H);
   if(G.mode==='title') drawTitle();
+  else if(G.mode==='login') drawTitle(true);
   else if(G.mode==='starter') drawStarter();
   else if(G.mode==='battle') drawBattle();
   else { drawWorld(); drawHUD();
-    if(G.menu==='talents') drawTalents(); else if(G.menu==='party') drawParty(); else if(G.menu==='quests') drawQuests(); else if(G.menu==='bag') drawBag(); else if(G.menu==='shop') drawShop();
+    if(G.menu==='system') drawSystemMenu(); else if(G.menu==='talents') drawTalents(); else if(G.menu==='party') drawParty(); else if(G.menu==='quests') drawQuests(); else if(G.menu==='bag') drawBag(); else if(G.menu==='shop') drawShop();
     drawDialog(); if(G.mode==='win') drawWin(); }
   drawParticles(); if(G.menu!=='talents') drawToasts();
   requestAnimationFrame(frame);
 }
 window.addEventListener('load',()=>{
   canvas=document.getElementById('game'); ctx=canvas.getContext('2d');
-  initWorld(); G=newState(); G.menuSel=0;
+  initWorld(); G=newState(); G.menuSel=0; G.mode='login'; showLogin(true);
+  $('chat-input').addEventListener('keydown',chatKey); setTimeout(()=>{ if(!window.NET){ MP.netMissing=true; if(G.mode==='login') renderLogin(); } },4000);
+  $('lg-submit').onclick=()=>doAuth('email'); $('lg-google').onclick=()=>doAuth('google'); $('lg-offline').onclick=playOffline;
+  $('lg-toggle').onclick=()=>{ MP.signup=!MP.signup; loginMsg(''); renderLogin(); };
+  $('lg-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth('email'); e.stopPropagation(); }); ['lg-email','lg-name'].forEach(id=>$(id).addEventListener('keydown',e=>e.stopPropagation()));
   window.addEventListener('keydown',e=>{ keys[e.code]=true; if(!e.repeat) onKey(e); else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
   window.addEventListener('keyup',e=>{ keys[e.code]=false; });
   window.addEventListener('blur',()=>{ keys={}; });
   canvas.addEventListener('mousemove',e=>onMouse(e,false)); canvas.addEventListener('click',e=>onMouse(e,true));
   requestAnimationFrame(frame);
-  window.__sv={get G(){return G;}, set G(v){G=v;}, WORLD:()=>WORLD, startBattle, makeCreature, grantPlayerXP, addCreature, saveGame};
+  window.__sv={MP, get G(){return G;}, set G(v){G=v;}, WORLD:()=>WORLD, startBattle, makeCreature, grantPlayerXP, addCreature, saveGame};
 });
