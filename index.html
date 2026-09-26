@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Shadowvale — Tamers of the Shadow Wyrm</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html,body{margin:0;height:100%;background:#0b0914;display:flex;align-items:center;justify-content:center;font-family:Trebuchet MS,sans-serif}
+  canvas{max-width:100vw;max-height:100vh;aspect-ratio:3/2;image-rendering:pixelated;border-radius:8px;box-shadow:0 0 40px #5a3d9a55}
+</style></head>
+<body><canvas id="game" width="960" height="640" tabindex="0"></canvas>
+<!-- Sections: data (config) → world (map) → core (state/progression) → render (sprites) → battle → main (world logic/quests) → ui (screens/HUD) → input (loop) -->
+<script src="js/data.js"></script><script src="js/world.js"></script><script src="js/core.js"></script><script src="js/render.js"></script>
+<script src="js/battle.js"></script><script src="js/main.js"></script><script src="js/ui.js"></script><script src="js/input.js"></script>
+</body></html>
