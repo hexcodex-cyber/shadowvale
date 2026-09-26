@@ -61,7 +61,7 @@ function drawHUD(){
   drawMinimap(W-138,H-102,128,88);
   drawOnlinePanel(); drawChat();
   // key hints
-  panel(10,H-40,300,30,0.7); text(window.NET&&NET.user?'E talk · Enter chat · T talents · P party · Q quests · Esc menu':'WASD move · E talk · T talents · P party · Q quests · Esc menu',20,H-20,{size:11,color:'#ddd'});
+
   // zone
   text(ZONE_NAMES[G.zone]||'',W-74,H-108,{size:12,align:'center',color:'#ffe9a8'});
 }
@@ -236,8 +236,8 @@ function drawTitle(bgOnly){
   text('SHADOWVALE',W/2,130,{size:64,bold:true,align:'center',color:'#ffd84a'}); text('Tamers of the Shadow Wyrm',W/2,170,{size:20,align:'center',color:'#e0c0ff'});
   if(bgOnly) return;
   const opts=hasSave()?['Continue','New Game']:['New Game']; opts.forEach((o,i)=>{ rr(W/2-120,400+i*56,240,44,10,G.menuSel===i?'#5a4a8a':'#2a2540','#c8a458',2); text(o,W/2,428+i*56,{size:20,bold:true,align:'center'}); });
-  text('Arrows + Enter · A Pokémon-style adventure with a World of Warcraft talent tree',W/2,H-30,{size:13,align:'center',color:'#aaa'});
-  text(window.NET&&NET.user?`🌐 Signed in as ${NET.user.name} — cloud save & shared world enabled`:'⚪ Offline mode — progress saved in this browser only',W/2,H-56,{size:14,align:'center',color:window.NET&&NET.user?'#9ae6ff':'#ccc'});
+  text('A Pokémon-style adventure with a World of Warcraft talent tree',W/2,H-80,{size:13,align:'center',color:'#aaa'});
+  text(window.NET&&NET.user?`🌐 Signed in as ${NET.user.name} — cloud save & shared world enabled`:'⚪ Offline mode — progress saved in this browser only',W/2,H-100,{size:14,align:'center',color:window.NET&&NET.user?'#9ae6ff':'#ccc'});
 }
 function drawStarter(){
   ctx.fillStyle='#1d1830'; ctx.fillRect(0,0,W,H); text('Choose your first companion',W/2,80,{size:30,bold:true,align:'center',color:'#ffd84a'});

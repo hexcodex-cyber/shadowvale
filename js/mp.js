@@ -51,7 +51,7 @@ function drawChat(){
   const now=performance.now(); const msgs=(NET.chat||[]).slice(MP.chatOpen?-12:-6).filter(m=>MP.chatOpen || now-(m._t||0)<25000);
   if(!msgs.length && !MP.chatOpen) return;
   const lines=[]; msgs.forEach(m=>wrap(`${m.name}: ${m.text}`,400,13).forEach((l,i)=>lines.push({l,me:m.uid===NET.user.uid,sys:m.sys,first:i===0})));
-  const show=lines.slice(-14), h=show.length*17+12, y0=H-(MP.chatOpen?125:90)-h;
+  const show=lines.slice(-14), h=show.length*17+12, y0=H-(MP.chatOpen?150:125)-h;
   rr(10,y0,420,h,6,'rgba(0,0,0,.55)'); show.forEach((o,i)=>text(o.l,18,y0+20+i*17,{size:13,color:o.sys?'#ff9':o.me?'#9ae6ff':'#fff'}));
   if(!MP.chatOpen) text('Enter: chat',426,y0-4,{size:10,align:'right',color:'#aaa'});
 }

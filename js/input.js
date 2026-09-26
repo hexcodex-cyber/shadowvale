@@ -24,6 +24,7 @@ function onKey(e){
   const mv={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'}[c];
   if(mv){ tryMove(mv); return; }
   if(c==='KeyE'||c==='Space'||c==='Enter') interact();
+  if(c==='KeyH'){ G.flags.hideKeys=!G.flags.hideKeys; toast(G.flags.hideKeys?'Key legend hidden (H to show)':'Key legend shown','#ccc',1.5); return; }
   if(c==='KeyT'){ G.menu='talents'; if(!G.talentSel) G.talentSel='ferocity'; }
   if(c==='KeyP'){ G.menu='party'; G.menuSel=0; }
   if(c==='KeyQ'||c==='KeyJ') G.menu='quests';
@@ -119,6 +120,7 @@ function frame(ts){
   else { drawWorld(); drawHUD();
     if(G.menu==='system') drawSystemMenu(); else if(G.menu==='talents') drawTalents(); else if(G.menu==='party') drawParty(); else if(G.menu==='quests') drawQuests(); else if(G.menu==='bag') drawBag(); else if(G.menu==='shop') drawShop();
     drawDialog(); if(G.mode==='win') drawWin(); }
+  if(G.menu!=='talents' && G.mode!=='login') drawLegend();
   drawParticles(); if(G.menu!=='talents') drawToasts();
   requestAnimationFrame(frame);
 }

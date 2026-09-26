@@ -1,0 +1,10 @@
+const {chromium}=require('playwright-core');
+(async()=>{ const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']}); const p=await b.newPage({viewport:{width:1000,height:680}}); const e=[];
+  p.on('pageerror',x=>e.push(x.message)); p.on('console',m=>{if(m.type()==='error')e.push(m.text())});
+  await p.goto('http://localhost:8765/index.html'); await p.evaluate(()=>localStorage.clear()); await p.reload(); await p.waitForTimeout(500); await p.click('#lg-offline'); await p.waitForTimeout(300);
+  await p.locator('#wrap').screenshot({path:'shots/34-legend-title.png'});
+  await p.keyboard.press('Enter'); await p.keyboard.press('Enter'); for(let i=0;i<4;i++) await p.keyboard.press('Space'); await p.waitForTimeout(300);
+  await p.locator('#wrap').screenshot({path:'shots/35-legend-world.png'});
+  await p.evaluate(()=>__sv.startBattle(__sv.makeCreature('Fluffwool',2))); await p.waitForTimeout(900); await p.keyboard.press('Space'); await p.keyboard.press('Space'); await p.waitForTimeout(300);
+  await p.locator('#wrap').screenshot({path:'shots/36-legend-battle.png'});
+  console.log('errors',e.length?e:'none'); await b.close(); })();
