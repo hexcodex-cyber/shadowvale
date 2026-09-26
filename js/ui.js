@@ -13,6 +13,7 @@ function drawWorld(){
   WORLD.relics.forEach(([x,y],i)=>{ if(!G.relics.includes(i)) sparkle(x,y,'#9ae6ff',tracker); });
   if(!G.flags.prismEgg && G.zone==='grove'){ const [ex,ey]=SECRET.egg, px=ex*TILE-ox+16, py=ey*TILE-oy+18+Math.sin(t*3)*2; ctx.fillStyle=`hsl(${(t*120)%360},90%,70%)`; ctx.beginPath(); ctx.ellipse(px,py,9,12,0,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); sparkle(ex,ey-0.3,`hsl(${(t*120+180)%360},90%,80%)`,true); }
   WORLD.petals.forEach(([x,y],i)=>{ if(!G.petals.includes(i) && G.quests.petals!=='done'){ const px=x*TILE-ox, py=y*TILE-oy; ctx.fillStyle=`rgba(120,200,255,${0.6+0.3*Math.sin(t*3+i)})`; for(let k=0;k<5;k++){ctx.beginPath();ctx.arc(px+16+Math.cos(k*1.26)*5,py+16+Math.sin(k*1.26)*5,4,0,7);ctx.fill();} ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(px+16,py+16,3,0,7); ctx.fill(); if(tracker) sparkle(x,y,'#8fd0ff',true);} });
+  (WORLD.gear||[]).forEach(([x,y],i)=>{ if(!(G.gear||[]).includes(i) && G.quests.gear!=='done') sparkle(x,y,'#bfe3ff',true); });
   WORLD.lambs.forEach(([x,y],i)=>{ if(!G.lambs.includes(i)){ drawCreature('Fluffwool',x*TILE-ox+16,y*TILE-oy+16,26,{t,shadow:true}); if(tracker) sparkle(x,y-0.6,'#fff',true);} });
   GUARDIANS.forEach(g=>{ if(!G.flags['g_'+g.id]){ const px=g.x*TILE-ox+16, py=g.y*TILE-oy+10; drawCreature(g.sp,px,py,g.final?64:52,{t}); text('!',px,py-36,{size:20,bold:true,color:'#ff5',align:'center'}); } });
   drawRift(ox,oy); drawRemotePlayers(ox,oy);
@@ -34,7 +35,7 @@ function drawHUD(){
   text(p.name.length>14?p.name.slice(0,13)+'…':p.name,22,34,{size:18,bold:true,color:G.flags.prismEgg?rainbowColor(0):'#fff'}); text(`Lv ${p.level}`,248,34,{size:18,bold:true,color:'#ffd84a',align:'right'});
   bar(22,42,226,10,p.level>=MAX_PLAYER_LEVEL?1:p.xp/playerXpNeed(p.level),'#b26cff');
   text(p.level>=MAX_PLAYER_LEVEL?'MAX LEVEL':`XP ${p.xp}/${playerXpNeed(p.level)}`,135,66,{size:12,align:'center',color:'#ddd'});
-  text(`💰 ${p.gold}g`,22,88,{size:15,color:'#ffd84a'}); text(`◈ ${G.shards.length}/3`,120,88,{size:15,color:'#ff9ad0'}); text(`✦ ${G.relics.length}/8`,190,88,{size:15,color:'#9ae6ff'});
+  text(`💰 ${p.gold}g`,22,88,{size:15,color:'#ffd84a'}); text(`◈ ${G.shards.length}/3`,120,88,{size:15,color:'#ff9ad0'}); text(`✦ ${G.relics.length}/${RELIC_SPOTS.length}`,185,88,{size:15,color:'#9ae6ff'});
   if(p.points>0){ const a=0.6+0.4*Math.sin(G.time*5); rr(18,96,234,20,6,`rgba(255,216,74,${a*0.35})`,'#ffd84a',1); text(`★ ${p.points} talent point${p.points>1?'s':''} — press T`,135,111,{size:13,bold:true,align:'center',color:'#ffd84a'}); }
   else text(`Talents: ${TALENTS.map((b,i)=>b.branch.slice(0,5)+' '+pointsInBranch(i)).join(' · ')}`,135,111,{size:11,align:'center',color:'#bbb'});
   // party
@@ -72,7 +73,7 @@ function drawHUD(){
 let minimapCanvas=null;
 function drawMinimap(x,y,w,h){
   if(!minimapCanvas){ minimapCanvas=document.createElement('canvas'); minimapCanvas.width=MAP_W; minimapCanvas.height=MAP_H; const m=minimapCanvas.getContext('2d');
-    const col={'.':'#5fae4a',',':'#3d8c30','T':'#1f5a22','~':'#2f78c4','=':'#c9a86a','s':'#e8d59a','R':'#3a2f2a','c':'#6b5040','W':'#2b2438','r':'#4a3a60','G':'#ff3fbf','b':'#8b5a2b','f':'#7cc060','B':'#c04040','F':'#8b5a2b','S':'#a57a48','Y':'#1f5a22','p':'#1f5a22'};
+    const col={'.':'#5fae4a',',':'#3d8c30','T':'#1f5a22','~':'#2f78c4','=':'#c9a86a','s':'#e8d59a','R':'#3a2f2a','c':'#6b5040','W':'#2b2438','r':'#4a3a60','G':'#ff3fbf','b':'#8b5a2b','f':'#7cc060','B':'#c04040','F':'#8b5a2b','S':'#a57a48','Y':'#1f5a22','p':'#1f5a22','n':'#eef4ff','N':'#c8d8e8','i':'#a8d8f0','M':'#8a9bb0'};
     for(let j=0;j<MAP_H;j++) for(let i=0;i<MAP_W;i++){ m.fillStyle=col[WORLD.tiles[j][i]]||'#000'; m.fillRect(i,j,1,1); } }
   panel(x-4,y-4,w+8,h+8); ctx.imageSmoothingEnabled=false; ctx.drawImage(minimapCanvas,x,y,w,h);
   const sx=w/MAP_W, sy=h/MAP_H;
@@ -159,9 +160,9 @@ function drawBag(){
       text(seen?sp:'???',x+cw/2,y+chh-24,{size:13,bold:true,align:'center',color:caught?(secret?rainbowColor(1):'#fff'):'#888'});
       if(seen) text(SPECIES[sp].type+(caught?' · caught':' · seen'),x+cw/2,y+chh-9,{size:10,align:'center',color:TYPE_COLORS[SPECIES[sp].type]}); else if(secret) text('Legend of the dreaming tree',x+cw/2,y+chh-9,{size:9,align:'center',color:'#8a6fb0'}); });
     if(!G.dex.caught.Prismewl) text(SECRET.lore,W/2,H-76,{size:12,align:'center',color:'#b9a0e0'}); }
-  if(G.bagTab===2){ let y=120; text(`Glimmer Relics: ${G.relics.length}/8`,100,y,{size:18,bold:true,color:'#9ae6ff'}); for(let i=0;i<8;i++){ const got=G.relics.includes(i); text(got?'✦':'✧',110+i*50,y+44,{size:34,color:got?'#9ae6ff':'#444'}); }
+  if(G.bagTab===2){ let y=120; text(`Glimmer Relics: ${G.relics.length}/${RELIC_SPOTS.length}`,100,y,{size:18,bold:true,color:'#9ae6ff'}); for(let i=0;i<RELIC_SPOTS.length;i++){ const got=G.relics.includes(i); text(got?'✦':'✧',110+i*50,y+44,{size:34,color:got?'#9ae6ff':'#444'}); }
     y+=90; text(`Rune Shards: ${G.shards.length}/3`,100,y,{size:18,bold:true,color:'#ff9ad0'}); ['Verdant Shard','Ember Shard','Tidal Shard'].forEach((s,i)=>text(`${G.shards.includes(s)?'◈':'◇'} ${s}`,110+i*220,y+32,{size:16,color:G.shards.includes(s)?'#ff9ad0':'#555'}));
-    y+=80; text(`Moonpetals: ${G.petals.length}/5    Lambs found: ${G.lambs.length}/3    Wild wins: ${G.wildWins}`,100,y,{size:16,color:'#ddd'});
+    y+=80; text(`Gear: ${(G.gear||[]).length}/3   Moonpetals: ${G.petals.length}/5    Lambs found: ${G.lambs.length}/3    Wild wins: ${G.wildWins}`,100,y,{size:16,color:'#ddd'});
     y+=36; text(G.flags.prismEgg?'🥚 Prismatic Egg — found in the Prism Grotto! (hatched into Prismewl)':'🥚 ??? — a unique treasure. Curiosity may reveal it.',100,y,{size:16,color:G.flags.prismEgg?rainbowColor(2):'#555'});
     y+=36; text(G.flags.crown?'👑 Ancient Crown equipped (+10% XP)':'👑 Ancient Crown — ???',100,y,{size:16,color:G.flags.crown?'#ffd84a':'#555'}); }
   text('←/→ switch tab · Esc close',W/2,H-56,{size:13,align:'center',color:'#ccc'});
@@ -189,7 +190,7 @@ function battleOptRect(i,menu){ const grid=menu==='fight'||menu==='learn', mx=W-
   return {x:mx+(grid?i%2:0)*178, y:H-180+(grid?Math.floor(i/2):i)*(grid?40:30), w:grid?170:348, h:grid?36:27}; }
 function drawBattle(){
   const b=G.battle, e=b.enemy, p=cur(b), t=G.time;
-  const zone=b.guardian?b.guardian.zone:G.zone; const sky={forest:['#274d2f','#6fa86a'],cave:['#2a1410','#6b3a22'],lake:['#3a7bd5','#a8e0ff'],ruins:['#150a22','#4a2060'],meadow:['#6ec6ff','#c8f0a0'],town:['#6ec6ff','#c8f0a0']}[zone]||['#6ec6ff','#c8f0a0'];
+  const zone=b.guardian?b.guardian.zone:G.zone; const sky={forest:['#274d2f','#6fa86a'],cave:['#2a1410','#6b3a22'],lake:['#3a7bd5','#a8e0ff'],ruins:['#150a22','#4a2060'],meadow:['#6ec6ff','#c8f0a0'],frost:['#9fb8d0','#f4f8ff'],coast:['#5fb8ff','#f2e2a8'],grove:['#6a3fa0','#f0a0e0'],town:['#6ec6ff','#c8f0a0']}[zone]||['#6ec6ff','#c8f0a0'];
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,sky[0]); g.addColorStop(1,sky[1]); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(700,250,150,34,0,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(250,430,170,38,0,0,7); ctx.fill();
   const es=b.shake.e>0?Math.sin(b.shake.e*60)*8:0, ps=b.shake.p>0?Math.sin(b.shake.p*60)*8:0, slide=b.intro*400;
@@ -256,7 +257,7 @@ function drawStarter(){
 function drawWin(){
   ctx.fillStyle='rgba(10,5,20,.9)'; ctx.fillRect(0,0,W,H); text('VICTORY!',W/2,160,{size:64,bold:true,align:'center',color:'#ffd84a'});
   text('Umbrax is defeated and the shadow lifts from Shadowvale.',W/2,220,{size:20,align:'center'});
-  const st=[`Tamer level: ${G.player.level}`,`Species caught: ${Object.keys(G.dex.caught).length}/${DEX_ORDER.length}`,`Relics: ${G.relics.length}/8`,`Side quests: ${SIDE_QUESTS.filter(q=>G.quests[q.id]==='done').length}/${SIDE_QUESTS.length}`,`Talents: ${TALENTS.map((b,i)=>b.branch+' '+pointsInBranch(i)).join(', ')}`];
+  const st=[`Tamer level: ${G.player.level}`,`Species caught: ${Object.keys(G.dex.caught).length}/${DEX_ORDER.length}`,`Relics: ${G.relics.length}/${RELIC_SPOTS.length}`,`Side quests: ${SIDE_QUESTS.filter(q=>G.quests[q.id]==='done').length}/${SIDE_QUESTS.length}`,`Talents: ${TALENTS.map((b,i)=>b.branch+' '+pointsInBranch(i)).join(', ')}`];
   st.forEach((s,i)=>text(s,W/2,290+i*32,{size:18,align:'center',color:'#e0c0ff'}));
   text('Press Enter to keep exploring (finish your collection!)',W/2,520,{size:16,align:'center',color:'#ccc'});
 }

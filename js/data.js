@@ -74,12 +74,18 @@ const SPECIES = {
               learn:[[1,'Tidal Slam'],[1,'Mist Veil'],[1,'Hydro Surge'],[1,'Headbutt']], desc:'Guardian of Mirror Lake.'},
   Prismewl:  {type:'Arcane', base:{hp:60,atk:70,def:55,spd:75}, catch:0, xp:120, secret:true, look:{body:'rainbow',accent:'#ffffff',feat:'ears'},
               learn:[[1,'Arcane Bolt'],[1,'Focus'],[8,'Mana Burst'],[8,'Leaf Storm'],[12,'Flame Fang'],[16,'Starfall']], desc:'Hatched from the Prismatic Egg. Its fur shifts through every colour. Only one exists.'},
+  Frostuft:  {type:'Water',  base:{hp:60,atk:52,def:58,spd:48}, catch:0.45, xp:65, look:{body:'#e8f4ff',accent:'#7fc8ff',feat:'wool'},
+              learn:[[1,'Tackle'],[1,'Bubble'],[6,'Mist Veil'],[10,'Tidal Slam'],[14,'Body Slam'],[18,'Hydro Surge']], desc:'Its frosty fleece keeps it warm on Frostpeak. Found only in the snow.'},
+  Glaciorn:  {type:'Earth',  base:{hp:65,atk:68,def:62,spd:38}, catch:0.35, xp:75, look:{body:'#8fb4cc',accent:'#e8fbff',feat:'horns'},
+              learn:[[1,'Tackle'],[1,'Pebble Toss'],[8,'Harden'],[11,'Rock Slide'],[15,'Headbutt'],[19,'Quake']], desc:'Ice-horned mountain goat. Charges down slopes at frightening speed.'},
+  Shellsnap: {type:'Water',  base:{hp:55,atk:60,def:70,spd:40}, catch:0.45, xp:65, look:{body:'#e07a5f',accent:'#f2cc8f',feat:'shell'},
+              learn:[[1,'Scratch'],[1,'Bubble'],[6,'Harden'],[10,'Tidal Slam'],[14,'Rock Slide'],[18,'Hydro Surge']], desc:'A coastal crab that snaps at anything shiny. Lives on Sunstone Coast.'},
   Riftmaw:   {type:'Arcane', base:{hp:95,atk:66,def:60,spd:50}, catch:0, xp:200, boss:true, look:{body:'#5b2a9a',accent:'#7ff0ff',feat:'wisp'},
               learn:[[1,'Mana Burst'],[1,'Nightmare'],[1,'Focus'],[1,'Rock Slide']], desc:'Multiplayer world boss from a tear in reality.'},
   Umbrax:    {type:'Shadow', base:{hp:100,atk:72,def:62,spd:60}, catch:0, xp:300, boss:true, look:{body:'#2a1840',accent:'#ff3fbf',feat:'dragon'},
               learn:[[1,'Void Rend'],[1,'Nightmare'],[1,'Terrify'],[1,'Corrode']], desc:'The Shadow Wyrm. Corrupter of Shadowvale.'},
 };
-const DEX_ORDER = ['Emberpup','Tidefin','Sproutle','Fluffwool','Glowmoth','Mossback','Shadekit','Cindermole','Pebblit','Rippletoad','Wispling','Prismewl'];
+const DEX_ORDER = ['Emberpup','Tidefin','Sproutle','Fluffwool','Glowmoth','Mossback','Shadekit','Cindermole','Pebblit','Rippletoad','Wispling','Frostuft','Glaciorn','Shellsnap','Prismewl'];
 // ===== Easter egg (secret) =====
 const SECRET = {egg:[27,4], door:[24,4], grove:{x:25,y:3,w:4,h:3}, name:'Prism Grotto', creature:'Prismewl', level:8,
   lore:'Bestiary note: "Whisperwood keeps one colour it never shows the sun."'};
@@ -88,6 +94,8 @@ const ZONES = {
   meadow: {name:'Sunny Meadow',  lv:[2,5],   table:[['Fluffwool',50],['Glowmoth',25],['Mossback',25]]},
   forest: {name:'Whisperwood',   lv:[4,8],   table:[['Shadekit',35],['Glowmoth',25],['Mossback',25],['Fluffwool',10],['Wispling',5]]},
   cave:   {name:'Ember Cave',    lv:[7,11],  table:[['Cindermole',45],['Pebblit',45],['Shadekit',10]]},
+  frost:  {name:'Frostpeak Pass',lv:[10,14], table:[['Frostuft',45],['Glaciorn',35],['Pebblit',20]]},
+  coast:  {name:'Sunstone Coast',lv:[8,12],  table:[['Shellsnap',50],['Rippletoad',25],['Glowmoth',25]]},
   lake:   {name:'Mirror Lake',   lv:[9,13],  table:[['Rippletoad',55],['Glowmoth',20],['Mossback',15],['Wispling',10]]},
 };
 
@@ -148,8 +156,11 @@ const SIDE_QUESTS = [
   {id:'collector', name:'The Collector', giver:'pip',   goal:6, progress:g=>Object.keys(g.dex.caught).length, obj:'Catch different species', reward:{gold:200, xp:200, items:{greater:5}},
    intro:["I'm writing the ultimate Bestiary of Shadowvale!","Catch 6 different species and show me. Check your Bestiary with [B]."],
    done:["SIX species! My Bestiary is coming along beautifully.","Here — Greater Soulstones. They'll help you catch the rare ones, like Wispling."]},
-  {id:'relics', name:'Glimmering Past',  giver:'pip',   goal:8, progress:g=>g.relics.length, obj:'Find hidden Glimmer Relics', reward:{gold:300, xp:250, flag:'crown'},
-   intro:["Also... legend says 8 Glimmer Relics are hidden across Shadowvale.","They sparkle faintly. A tracker's eye would spot them more easily..."],
+  {id:'gear', name:'Frozen Gear', giver:'brann', goal:3, progress:g=>(g.gear||[]).length, obj:'Recover Brann\'s climbing gear in Frostpeak', reward:{gold:180, xp:200, items:{greater:2, superpotion:2}},
+   intro:["An avalanche buried my climbing gear up on Frostpeak!","My ice pick, my rope and my lantern. They glint blue in the snow. Walk over them to pick them up."],
+   done:["My gear! Now I can finally reach the summit.","Take these — Greater Soulstones catch Glaciorn much more easily."]},
+  {id:'relics', name:'Glimmering Past',  giver:'pip',   goal:10, progress:g=>g.relics.length, obj:'Find hidden Glimmer Relics', reward:{gold:300, xp:250, flag:'crown'},
+   intro:["Also... legend says 10 Glimmer Relics are hidden across Shadowvale.","They sparkle faintly. A tracker's eye would spot them more easily..."],
    done:["All eight relics! Incredible!","Wear this Ancient Crown — it grants +10% experience forever."], after:'collector'},
 ];
 
@@ -162,7 +173,7 @@ const GUARDIANS = [
 ];
 
 // Collectables placed in the world (snapped to nearest walkable tile at load)
-const RELIC_SPOTS  = [[5,4],[39,3],[59,11],[47,5],[3,40],[60,28],[40,31],[20,39]]; // [40,31] is a water-locked islet: reach it by Orca or flying mount
+const RELIC_SPOTS  = [[5,4],[39,3],[59,11],[47,5],[3,40],[60,28],[40,31],[20,39],[72,8],[45,54]]; // [72,8] Frostpeak; [45,54] coast island B (orca/flyers) // [40,31] is a water-locked islet: reach it by Orca or flying mount
 const PETAL_SPOTS  = [[6,4],[20,3],[18,10],[33,10],[8,10]];
 const LAMB_SPOTS   = [[37,17],[6,35],[38,29]];
 
@@ -177,6 +188,8 @@ const NPCS = [
   {id:'tobin', name:'Farmer Tobin',    x:25, y:30, color:'#a0522d', hat:'#f4d03f'},
 ];
 const INN_SPOT = [17,20];
+const GEAR_SPOTS = [[67,6],[75,18],[70,36]];
+NPCS.push({id:'brann', name:'Mountaineer Brann', x:65, y:26, color:'#34495e', hat:'#ecf0f1'});
 NPCS.push({id:'hilda', name:'Stablemaster Hilda', x:10, y:29, color:'#6e4b2a', hat:'#c0392b'});
 NPCS.push({id:'marlo', name:'Dockhand Marlo',    x:34, y:33, color:'#2c5d8a', hat:'#f0f0f0'});
 
@@ -192,6 +205,6 @@ const MOUNTS = {
               colors:{body:'#141414', belly:'#f4f4f4', accent:'#9ad0ff'}, desc:'Swims lakes and seas (reaches the lake islet relic). 2 seats. Free from Dockhand Marlo.'},
 };
 // First-person renderer tile config: h = wall height (tiles), floor = ground colour
-const FP_WALLS = { T:{h:1.35}, R:{h:1.7}, W:{h:1.5}, B:{h:1.9}, G:{h:1.5}, F:{h:0.45}, S:{h:0.55} };
+const FP_WALLS = { M:{h:1.6}, T:{h:1.35}, R:{h:1.7}, W:{h:1.5}, B:{h:1.9}, G:{h:1.5}, F:{h:0.45}, S:{h:0.55} };
 const FP_FLOOR = { '.':[95,174,74], ',':[62,140,48], 'f':[110,180,90], '=':[201,168,106], 's':[232,213,154], '~':[47,120,196], 'b':[139,90,43],
-                   'c':[99,76,61], 'p':[150,90,200], 'Y':[70,140,60], 'r':[67,58,88], 'T':[70,140,60], 'R':[58,47,42], 'W':[43,36,56], 'G':[43,36,56], 'B':[95,174,74], 'F':[95,174,74], 'S':[95,174,74] };
+                   'c':[99,76,61], 'n':[236,242,250], 'N':[200,216,232], 'i':[168,216,240], 'M':[138,155,176], 'p':[150,90,200], 'Y':[70,140,60], 'r':[67,58,88], 'T':[70,140,60], 'R':[58,47,42], 'W':[43,36,56], 'G':[43,36,56], 'B':[95,174,74], 'F':[95,174,74], 'S':[95,174,74] };

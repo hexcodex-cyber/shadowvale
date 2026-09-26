@@ -12,7 +12,7 @@ function newState(){
     items:{soulstone:5, potion:3, greater:0, superpotion:0, revive:0},
     party:[], storage:[],
     dex:{seen:{}, caught:{}},
-    relics:[], petals:[], lambs:[], shards:[],
+    relics:[], petals:[], lambs:[], shards:[], gear:[],
     wildWins:0, quests:{}, flags:{}, cooldowns:{}, camoUntil:0,
     zone:'town', time:0, mounts:{}, ride:null,
   };

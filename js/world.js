@@ -1,7 +1,7 @@
 // ===== Shadowvale: world map generation =====
 'use strict';
-const MAP_W = 64, MAP_H = 44;
-const SOLID = new Set(['T','~','R','W','G','B','F','S','K']);
+const MAP_W = 80, MAP_H = 60; // original map is x<64,y<44; Frostpeak Pass east (x>=64), Sunstone Coast south (y>=44)
+const SOLID = new Set(['T','~','R','W','G','B','F','S','K','M']);
 function seededRand(seed){ let s = seed>>>0; return ()=>{ s = (s*1664525 + 1013904223)>>>0; return s/4294967296; }; }
 
 function buildWorld(){
@@ -46,6 +46,24 @@ function buildWorld(){
   rect(36,34,14,1,'b');
   set(40,31,'s'); // tiny water-locked islet (orca / flying mounts only)
   rect(33,27,8,3,','); rect(34,38,7,3,',');
+  // ---- NEW: old outer walls, now with passes ----
+  rect(62,2,2,40,'M'); rect(62,27,2,2,'n');            // cliff wall between the lake area and Frostpeak, pass at y=27-28
+  rect(2,42,60,2,'T'); rect(20,42,2,2,'=');            // treeline above the coast, path at x=20-21
+  // ---- NEW ZONE: Frostpeak Pass (east) ----
+  rect(64,2,14,40,'n');
+  rect(66,5,6,4,'N'); rect(70,14,6,5,'N'); rect(65,33,7,4,'N'); rect(66,21,3,3,'N');
+  rect(70,24,5,3,'i');
+  rect(64,11,9,1,'M'); rect(75,11,3,1,'M'); rect(68,30,10,1,'M'); rect(64,30,2,1,'M');   // ridges with gaps
+  for(let i=0;i<40;i++){ const x=64+Math.floor(rnd()*14), y=2+Math.floor(rnd()*40); if(m[y][x]==='n' && !(y>=26&&y<=29)) m[y][x]= rnd()<0.5?'M':'T'; }
+  rect(64,27,4,2,'n');
+  // ---- NEW ZONE: Sunstone Coast (south) ----
+  rect(2,44,76,4,'s'); rect(2,48,76,10,'~');
+  rect(62,42,16,2,'M');                                   // Frostpeak and coast don't connect directly
+  rect(6,44,8,3,','); rect(40,44,10,3,','); rect(26,44,6,2,',');
+  for(let y=50;y<=54;y++) for(let x=12;x<=18;x++){ const d=((x-15)/3.2)**2+((y-52)/2.4)**2; if(d<1) m[y][x]='s'; }   // island A (orca / flyers)
+  for(let y=51;y<=56;y++) for(let x=42;x<=48;x++){ const d=((x-45)/3.2)**2+((y-53.5)/2.4)**2; if(d<1) m[y][x]='s'; } // island B
+  set(14,51,'T'); set(16,53,'T'); set(44,52,'T'); set(47,54,'T');
+  for(let i=0;i<12;i++){ const x=3+Math.floor(rnd()*72); if(m[45][x]==='s' && x!==20 && x!==21) m[45][x]='T'; }
   // ---- border ----
   for(let y=0;y<MAP_H;y++) for(let x=0;x<MAP_W;x++) if(x<2||y<2||x>=MAP_W-2||y>=MAP_H-2){ if(m[y][x]!=='R') m[y][x]='T'; }
   // ---- decorative scatter ----
@@ -70,6 +88,8 @@ function buildWorld(){
     {x:14,y:20,text:'BRIGHTVALE — Inn (north-east), Shop (south-west). Whisperwood lies north.'},
     {x:41,y:20,text:'EAST: The Shadow Ruins. Sealed by three Rune Shards. Travellers beware!'},
     {x:43,y:19,text:'NORTH: Ember Cave — home of Magmaw, the fire guardian.'},
+    {x:61,y:26,text:'EAST: Frostpeak Pass. Snow, ice, and creatures that love the cold.'},
+    {x:22,y:41,text:'SOUTH: Sunstone Coast. Islands lie beyond the surf — bring a swimmer or a flyer.'},
     {x:33,y:25,text:'SOUTH-EAST: Mirror Lake. The guardian Tidecaller rests on the island.'},
     {x:14,y:12,text:'Whisperwood. Thornwarden guards the glade to the north-east.'},
     {x:22,y:6,text:'Scratched into the post: "Count the trees east of here. One of them is dreaming in colour — and dreams let the curious pass."'},
@@ -88,6 +108,8 @@ function nearestWalkable(tiles, x, y){
 
 function zoneAt(x,y){
   if(x>=47&&x<=59&&y>=19&&y<=25) return 'ruins';
+  if(x>=64 && y<42) return 'frost';
+  if(y>=44) return 'coast';
   if(x>=25&&x<=28&&y>=3&&y<=5) return 'grove';
   if(x>=42&&y<=18) return 'cave';
   if(y<=12) return 'forest';
@@ -95,4 +117,4 @@ function zoneAt(x,y){
   if(x>=32&&y>=26) return 'lake';
   return 'meadow';
 }
-const ZONE_NAMES = {grove:'Prism Grotto', town:'Brightvale', meadow:'Sunny Meadow', forest:'Whisperwood', cave:'Ember Cave', lake:'Mirror Lake', ruins:'Shadow Ruins'};
+const ZONE_NAMES = {grove:'Prism Grotto', frost:'Frostpeak Pass', coast:'Sunstone Coast', town:'Brightvale', meadow:'Sunny Meadow', forest:'Whisperwood', cave:'Ember Cave', lake:'Mirror Lake', ruins:'Shadow Ruins'};

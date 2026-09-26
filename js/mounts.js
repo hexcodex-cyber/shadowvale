@@ -126,6 +126,7 @@ function wallColor(c,u,v,x,y,t){ // u across face 0..1, v top..bottom 0..1
   const h=tileHash(x,y), n=((Math.sin(u*37+h)*43758.5)%1+1)%1;
   switch(c){
     case 'T': if(v>0.72) return Math.abs(u-0.5)<0.14?[92,58,30]:[70,140,60]; return [40+n*25,110+n*40,45+n*15];
+    case 'M': return v<0.25?[240,246,255]:(((Math.floor(v*5)+Math.floor(u*3))%2)?[125,143,166]:[108,124,146]);
     case 'R': return ((Math.floor(v*4)+Math.floor(u*3+(Math.floor(v*4)%2)*0.5))%2)?[78,65,58]:[58,47,42];
     case 'W': return (v*4%1<0.08||(u*2+Math.floor(v*4)*0.5)%1<0.05)?[30,24,40]:[69,58,92];
     case 'G': return [120,40,140];
@@ -141,7 +142,7 @@ function drawFirstPerson(){
   const cam=fpCamera(), t=G.time, dirX=Math.cos(cam.a), dirY=Math.sin(cam.a), plX=-dirY*0.66, plY=dirX*0.66;
   const hor=Math.floor(RH*0.5 - (cam.fly?18:0) + (G.ride.bob?Math.sin(G.ride.bob*3)*1.2:0)), eye=cam.eye;
   const cave=G.zone==='cave', ruins=G.zone==='ruins';
-  const skyTop=cave?[20,10,8]:ruins?[25,10,40]:[70,130,220], skyBot=cave?[70,40,30]:ruins?[90,40,110]:[200,225,255], fog=skyBot, maxD=cam.fly?30:22;
+  const frost=G.zone==='frost'; const skyTop=cave?[20,10,8]:ruins?[25,10,40]:frost?[150,175,205]:[70,130,220], skyBot=cave?[70,40,30]:ruins?[90,40,110]:frost?[240,245,252]:[200,225,255], fog=skyBot, maxD=cam.fly?30:22;
   const buf=fpBuf;
   for(let y=0;y<Math.max(0,hor);y++){ const f=y/Math.max(1,hor); const c=pack(skyTop[0]+(skyBot[0]-skyTop[0])*f, skyTop[1]+(skyBot[1]-skyTop[1])*f, skyTop[2]+(skyBot[2]-skyTop[2])*f); buf.fill(c,y*RW,y*RW+RW); }
   // floor casting

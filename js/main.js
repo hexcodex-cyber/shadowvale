@@ -2,13 +2,14 @@
 'use strict';
 let WORLD, canvas, keys={}, lastT=0, toasts=[], mouse={x:0,y:0};
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
-const ENCOUNTER_RATE={',':0.12,'c':0.07};
+const ENCOUNTER_RATE={',':0.12,'c':0.07,'N':0.12};
 
 // ---------------- world setup ----------------
 function initWorld(){
   WORLD=buildWorld();
   WORLD.relics=RELIC_SPOTS.map(([x,y])=>nearestWalkable(WORLD.tiles,x,y));
   WORLD.petals=PETAL_SPOTS.map(([x,y])=>nearestWalkable(WORLD.tiles,x,y));
+  WORLD.gear=GEAR_SPOTS.map(([x,y])=>nearestWalkable(WORLD.tiles,x,y));
   WORLD.lambs=LAMB_SPOTS.map(([x,y])=>nearestWalkable(WORLD.tiles,x,y));
 }
 function tileAt(x,y){ if(x<0||y<0||x>=MAP_W||y>=MAP_H) return 'T'; if(x===47&&y===22&&G&&G.flags.gateOpen) return 'r'; return WORLD.tiles[y][x]; }
@@ -62,6 +63,7 @@ const NPC_TALK = {
   hilda(n){ showDialog(n.name,[G.flags.g_thorn&&!mountOwned('dragon')?"The Thornwarden is calmed — the dragons trust you now. Take one, free of charge!":"Horses, dragonflies, even dragons! Every mount has room for friends.","Press M anywhere to summon a mount you own."],()=>{ G.menu='stable'; G.menuSel=0; }); },
   marlo(n){ if(!mountOwned('orca')){ showDialog(n.name,["Ahoy! This orca, Bubbles, has been itching to swim with a tamer.","She's yours. Stand next to water and press M to ride. There's a relic on a tiny islet out there only she can reach... or a flyer."],()=>{ G.mounts.orca=true; toast('🐋 Orca acquired! Press M next to water','#9ad0ff',4); saveGame(); }); }
     else showDialog(n.name,["Bubbles misses you. Press M next to water to ride her."]); },
+  brann(n){ if(!talkSideQuest(n,sideQuest('gear'))) showDialog(n.name,["The summit's clear today. Watch out for Glaciorn — they charge!"]); },
   tobin(n){ if(!talkSideQuest(n,sideQuest('lambs'))) showDialog(n.name,["The lambs are safe and happy. Baaa-rilliant!"]); },
 };
 
@@ -102,8 +104,9 @@ function onStep(noEnc){
   const p=G.player, x=p.tx, y=p.ty;
   const z=zoneAt(x,y); if(z!==G.zone){ G.zone=z; toast(`— ${ZONE_NAMES[z]} —`,'#ffe9a8',2.5); }
   WORLD.relics.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.relics.includes(i)){ G.relics.push(i); const gold=grantGold(40); grantPlayerXP(25);
-    toast(`✦ Glimmer Relic found! (${G.relics.length}/8) +${gold}g`,'#9ae6ff',4); burst(W/2,H/2,'#9ae6ff'); checkQuestToasts(); saveGame(); } });
+    toast(`✦ Glimmer Relic found! (${G.relics.length}/${RELIC_SPOTS.length}) +${gold}g`,'#9ae6ff',4); burst(W/2,H/2,'#9ae6ff'); checkQuestToasts(); saveGame(); } });
   if(!G.flags.prismEgg && x===SECRET.egg[0] && y===SECRET.egg[1]) findPrismaticEgg();
+  WORLD.gear.forEach(([rx,ry],i)=>{ G.gear=G.gear||[]; if(rx===x&&ry===y&&!G.gear.includes(i)){ G.gear.push(i); toast(`🧗 Climbing gear found (${G.gear.length}/3)`,'#bfe3ff'); burst(W/2,H/2,'#bfe3ff'); checkQuestToasts(); saveGame(); } });
   WORLD.petals.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.petals.includes(i)){ G.petals.push(i); toast(`❀ Moonpetal gathered (${G.petals.length}/5)`,'#8fd0ff'); burst(W/2,H/2,'#8fd0ff'); checkQuestToasts(); } });
   const t=tileAt(x,y);
   if(!noEnc && !G.ride && ENCOUNTER_RATE[t] && G.time>=G.camoUntil && ZONES[z] && partyAlive().length){
