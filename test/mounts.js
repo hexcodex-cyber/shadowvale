@@ -14,6 +14,7 @@ const URL=process.env.URL||'http://localhost:8765/index.html';
     const after=await p.evaluate(()=>[__sv.G.ride.x,__sv.G.ride.y]); res[name+'_moved']=Math.hypot(after[0]-before[0],after[1]-before[1]).toFixed(2);
     await shot(shotName); };
   await ride('horse',12,22,'right','horse',600,'40-horse-fp');
+  await ride('horseforest',12,11,'up','horse',300,'46-horse-forest-fp');
   await ride('dragon',12,14,'up','dragon',900,'41-dragon-fp');
   res.dragon_over_trees=await p.evaluate(()=>tileAt(Math.floor(__sv.G.ride.x),Math.floor(__sv.G.ride.y)));
   await ride('dragonfly',30,21,'right','dragonfly',500,'42-dragonfly-fp');

@@ -159,7 +159,7 @@ function drawFirstPerson(){
     let sdx=(rdx<0?cam.x-mx:mx+1-cam.x)*ddx, sdy=(rdy<0?cam.y-my:my+1-cam.y)*ddy; const hits=[]; zbuf[x]=99;
     for(let i=0;i<64;i++){ let side; if(sdx<sdy){ sdx+=ddx; mx+=stx; side=0; } else { sdy+=ddy; my+=sty; side=1; }
       const d= side===0? sdx-ddx : sdy-ddy; if(d>maxD) break;
-      const c=(mx<0||my<0||mx>=MAP_W||my>=MAP_H)?'T':tileAt(mx,my); const wc=FP_WALLS[c]; if(!wc) continue;
+      const c=(mx<0||my<0||mx>=MAP_W||my>=MAP_H)?'R':tileAt(mx,my); const wc=FP_WALLS[c]; if(!wc || (c==='T' && !cam.fly)) continue;
       let u= side===0? cam.y+d*rdy : cam.x+d*rdx; u-=Math.floor(u);
       hits.push({c,d,de:Math.min(sdx,sdy),side,u,mx,my,h:wc.h}); if(zbuf[x]===99 && wc.h>eye*0.8) zbuf[x]=d;
       if(!cam.fly && wc.h>=1.3 && hits.length>=1 && wc.h>eye) { if(wc.h>=1.35) break; }
@@ -178,6 +178,7 @@ function drawFirstPerson(){
 function drawFPSprites(cam,dirX,dirY,plX,plY,hor){
   const k=W/RW, sprites=[]; const inv=1/(plX*dirY-dirX*plY);
   const add=(x,y,kind,data)=>{ const sx=x-cam.x, sy=y-cam.y; const tx=inv*(dirY*sx-dirX*sy), ty=inv*(-plY*sx+plX*sy); if(ty<0.25||ty>28) return; sprites.push({tx,ty,kind,data}); };
+  if(!cam.fly){ const R=14, cx0=Math.floor(cam.x), cy0=Math.floor(cam.y); for(let y=Math.max(0,cy0-R);y<=Math.min(MAP_H-1,cy0+R);y++) for(let x=Math.max(0,cx0-R);x<=Math.min(MAP_W-1,cx0+R);x++) if(tileAt(x,y)==='T') add(x+0.5,y+0.5,'tree',{h:tileHash(x,y)}); }
   NPCS.forEach(n=>add(n.x+0.5,n.y+0.5,'npc',n));
   GUARDIANS.forEach(g=>{ if(!G.flags['g_'+g.id]) add(g.x+0.5,g.y+0.5,'mon',{sp:g.sp,size:g.final?1.8:1.4}); });
   WORLD.lambs.forEach(([x,y],i)=>{ if(!G.lambs.includes(i)) add(x+0.5,y+0.5,'mon',{sp:'Fluffwool',size:0.7}); });
@@ -194,32 +195,39 @@ function drawFPSprites(cam,dirX,dirY,plX,plY,hor){
       drawPerson(0,0,s.kind==='npc'?s.data.color:colorFor(s.data.uid),s.kind==='npc'?s.data.hat:'#222','down',0,s.kind==='player'); ctx.restore();
       if(px>14){ const nm=s.kind==='npc'?s.data.name:`${s.data.r.name} · Lv ${s.data.r.lvl||1}`; text(nm,X,Y-px*1.25,{size:Math.max(10,Math.min(14,px/5)),bold:true,align:'center',color:s.kind==='npc'?'#ffe9a8':'#9ae6ff'}); } continue; }
     if(s.kind==='mon'){ drawCreature(s.data.sp,X,Y-px*s.data.size*0.5,px*s.data.size,{t:G.time}); }
+    if(s.kind==='tree'){ const f=Math.min(1,s.ty/(cam.fly?30:22)), fog=G.zone==='cave'?[70,40,30]:[200,225,255], v=(s.data.h%5)*6;
+      const cs=(c)=>{ const m=fogMix(c,f,fog); return `rgb(${m[0]|0},${m[1]|0},${m[2]|0})`; }; const sz=px*(0.9+(s.data.h%3)*0.08);
+      ctx.fillStyle=cs([92,58,30]); ctx.fillRect(X-sz*0.07,Y-sz*0.6,sz*0.14,sz*0.6);
+      ctx.fillStyle=cs([34,100+v,40]); ctx.beginPath(); ctx.arc(X,Y-sz*1.0,sz*0.42,0,7); ctx.arc(X-sz*0.22,Y-sz*0.78,sz*0.3,0,7); ctx.arc(X+sz*0.22,Y-sz*0.8,sz*0.3,0,7); ctx.fill();
+      ctx.fillStyle=cs([70,150+v,70]); ctx.beginPath(); ctx.arc(X-sz*0.12,Y-sz*1.1,sz*0.18,0,7); ctx.fill(); ctx.restore(); continue; }
     if(s.kind==='relic'){ ctx.globalAlpha=0.8; ctx.fillStyle='#9ae6ff'; ctx.beginPath(); for(let i=0;i<8;i++){ const rr2=(i%2?0.08:0.25)*px, an=i*Math.PI/4+G.time; ctx.lineTo(X+Math.cos(an)*rr2,Y-px*0.4+Math.sin(an)*rr2);} ctx.fill(); }
     ctx.restore(); }
 }
 function drawMountForeground(type,t,bob){
   const c=MOUNTS[type].colors, b=Math.sin(bob*3)*6, cx=W/2; ctx.save();
+  const shrink=(k)=>{ ctx.translate(cx,H); ctx.scale(k,k); ctx.translate(-cx,-H); };
+  if(type==='horse') shrink(0.7);
   if(type==='horse'){ ctx.fillStyle=c.body; ctx.beginPath(); ctx.moveTo(cx-120,H); ctx.quadraticCurveTo(cx-60,H-200+b,cx-30,H-250+b); ctx.lineTo(cx+30,H-250+b); ctx.quadraticCurveTo(cx+60,H-200+b,cx+120,H); ctx.fill();
     ctx.fillStyle=c.mane; ctx.beginPath(); ctx.moveTo(cx-18,H); ctx.lineTo(cx-14,H-245+b); ctx.lineTo(cx+14,H-245+b); ctx.lineTo(cx+18,H); ctx.fill();
     for(const s of [-1,1]){ ctx.fillStyle=c.body; ctx.beginPath(); ctx.moveTo(cx+s*14,H-240+b); ctx.lineTo(cx+s*36,H-300+b+Math.sin(t*2)*3); ctx.lineTo(cx+s*40,H-236+b); ctx.fill(); ctx.fillStyle=c.accent; ctx.beginPath(); ctx.moveTo(cx+s*22,H-244+b); ctx.lineTo(cx+s*34,H-284+b); ctx.lineTo(cx+s*35,H-244+b); ctx.fill(); }
     ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(cx-150,H); ctx.quadraticCurveTo(cx-60,H-150+b,cx-40,H-210+b); ctx.moveTo(cx+150,H); ctx.quadraticCurveTo(cx+60,H-150+b,cx+40,H-210+b); ctx.stroke(); }
   if(type==='dragon'){ const fl=Math.sin(t*3)*20; for(const s of [-1,1]){ ctx.fillStyle=c.mane; ctx.beginPath(); ctx.moveTo(cx+s*100,H); ctx.lineTo(cx+s*W*0.55,H-260-fl); ctx.lineTo(cx+s*W*0.52,H-120-fl*0.5); ctx.lineTo(cx+s*W*0.5,H); ctx.fill(); }
-    ctx.fillStyle=c.body; ctx.beginPath(); ctx.moveTo(cx-110,H); ctx.quadraticCurveTo(cx-50,H-190+b,cx-40,H-230+b); ctx.lineTo(cx+40,H-230+b); ctx.quadraticCurveTo(cx+50,H-190+b,cx+110,H); ctx.fill();
+    shrink(0.65); ctx.fillStyle=c.body; ctx.beginPath(); ctx.moveTo(cx-110,H); ctx.quadraticCurveTo(cx-50,H-190+b,cx-40,H-230+b); ctx.lineTo(cx+40,H-230+b); ctx.quadraticCurveTo(cx+50,H-190+b,cx+110,H); ctx.fill();
     ctx.fillStyle='rgba(0,0,0,.18)'; for(let i=0;i<5;i++){ ctx.beginPath(); ctx.arc(cx,H-30-i*42+b*0.5,14,0,Math.PI); ctx.fill(); }
     for(const s of [-1,1]){ ctx.fillStyle=c.accent; ctx.beginPath(); ctx.moveTo(cx+s*22,H-226+b); ctx.quadraticCurveTo(cx+s*50,H-300+b,cx+s*70,H-330+b); ctx.lineTo(cx+s*40,H-226+b); ctx.fill(); } }
   if(type==='dragonfly'){ const a=0.35+0.3*Math.abs(Math.sin(t*38)); for(const s of [-1,1]) for(const off of [0,70]){ ctx.globalAlpha=a; ctx.fillStyle=c.wing; ctx.beginPath(); ctx.ellipse(cx+s*(W*0.42),H-180-off+Math.sin(t*38+off)*14,W*0.2,40,s*0.25,0,7); ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1; ctx.stroke(); } ctx.globalAlpha=1;
     ctx.fillStyle=c.body; ctx.beginPath(); ctx.ellipse(cx,H+20,90,120+b,0,0,7); ctx.fill(); for(const s of [-1,1]){ ctx.fillStyle=c.accent; ctx.beginPath(); ctx.ellipse(cx+s*48,H-70+b,34,40,0,0,7); ctx.fill(); ctx.fillStyle='rgba(0,60,80,.35)'; for(let i=0;i<6;i++){ ctx.beginPath(); ctx.arc(cx+s*48+Math.cos(i)*16,H-70+b+Math.sin(i)*18,4,0,7); ctx.fill(); } } }
-  if(type==='orca'){ ctx.fillStyle='rgba(154,208,255,.55)'; ctx.fillRect(0,H-60,W,60); ctx.fillStyle=c.body; ctx.beginPath(); ctx.ellipse(cx,H+40,W*0.3,110,0,0,7); ctx.fill();
+  if(type==='orca'){ ctx.fillStyle='rgba(154,208,255,.55)'; ctx.fillRect(0,H-60,W,60); ctx.save(); shrink(0.7); ctx.fillStyle=c.body; ctx.beginPath(); ctx.ellipse(cx,H+40,W*0.3,110,0,0,7); ctx.fill();
     ctx.beginPath(); ctx.moveTo(cx-30,H-70+b); ctx.quadraticCurveTo(cx-10,H-220+b,cx+40,H-260+b); ctx.quadraticCurveTo(cx+20,H-160+b,cx+40,H-70+b); ctx.fill();
-    ctx.fillStyle=c.belly; ctx.beginPath(); ctx.ellipse(cx-120,H-40,40,14,0.2,0,7); ctx.fill();
+    ctx.fillStyle=c.belly; ctx.beginPath(); ctx.ellipse(cx-120,H-40,40,14,0.2,0,7); ctx.fill(); ctx.restore();
     ctx.fillStyle='rgba(255,255,255,.85)'; for(let i=0;i<14;i++){ const sx=(i%2?1:-1)*(W*0.25+Math.sin(t*4+i)*40+i*6), sy=H-40-Math.abs(Math.sin(t*5+i))*50; ctx.beginPath(); ctx.arc(cx+sx,sy,3+i%3,0,7); ctx.fill(); } }
   ctx.restore();
 }
 function drawRideHUD(){
   const r=G.ride, m=MOUNTS[r.type]; let used=1; if(netOn()) used=livePlayers().filter(([,q])=>q.ride&&q.ride.id===r.id).length+1;
   const seats=Array.from({length:m.seats},(_,i)=>i<used?'●':'○').join(' ');
-  panel(W/2-170,H-150,340,56,0.8); text(`${m.icon} ${m.name} — ${r.driver?'Driving':'Passenger'}  ·  Seats ${seats}`,W/2,H-128,{size:14,bold:true,align:'center',color:'#ffd84a'});
-  text(r.driver?(m.terrain==='air'?'Flying: soar over trees, walls & water':m.terrain==='water'?'Swimming: water only':'Galloping: land only')+' · no wild encounters':`Riding with ${(NET.players[r.duid]||{}).name||'driver'} — M to hop off`,W/2,H-108,{size:11,align:'center',color:'#ddd'});
+  panel(W/2-170,40,340,56,0.8); text(`${m.icon} ${m.name} — ${r.driver?'Driving':'Passenger'}  ·  Seats ${seats}`,W/2,62,{size:14,bold:true,align:'center',color:'#ffd84a'});
+  text(r.driver?(m.terrain==='air'?'Flying: soar over trees, walls & water':m.terrain==='water'?'Swimming: water only':'Galloping: land only')+' · no wild encounters':`Riding with ${(NET.players[r.duid]||{}).name||'driver'} — M to hop off`,W/2,82,{size:11,align:'center',color:'#ddd'});
   // heading arrow on minimap
   const x=W-138,y=H-102,w=128,h=88, sx=w/MAP_W, sy=h/MAP_H, px=x+(r.x)*sx, py=y+(r.y)*sy; ctx.strokeStyle='#ffd84a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+Math.cos(r.a)*9,py+Math.sin(r.a)*9); ctx.stroke();
 }

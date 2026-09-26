@@ -45,7 +45,8 @@ function drawHUD(){
   SIDE_QUESTS.forEach(q=>{ if(G.quests[q.id]==='active'){ const pr=Math.min(q.progress(G),q.goal); lines.push({t:'◇ '+q.name,c:pr>=q.goal?'#4cd964':'#8fd0ff',b:true}); lines.push({t:pr>=q.goal?`Return to ${NPCS.find(n=>n.id===q.giver).name}`:`${q.obj}: ${pr}/${q.goal}`,c:'#ddd'}); } });
   let wrapped=[]; lines.forEach(l=>wrap(l.t,270,13).forEach(w=>wrapped.push({...l,t:w})));
   panel(W-300,10,290,20+wrapped.length*17); wrapped.forEach((l,i)=>text(l.t,W-288,30+i*17,{size:13,color:l.c,bold:l.b}));
-  // ability hotbar (overworld + battle abilities)
+  // ability hotbar (overworld + battle abilities) — hidden while mounted so the first-person view stays clear
+  if(!G.ride){
   const all=[...OVERWORLD_ABILITIES,'rally','unleash','snare']; const bw=54, bx=W/2-(all.length*bw+8)/2;
   panel(bx-6,H-72,all.length*bw+20,64);
   all.forEach((id,i)=>{ const t=TALENT_BY_ID[id], x=bx+i*bw+4, y=H-66, un=rank(id)>0;
@@ -56,6 +57,7 @@ function drawHUD(){
     text(t.key?`[${t.key}]`:'⚔',x+4,y+12,{size:10,color:t.key?'#fff':'#f99'});
   });
   text('Overworld [1][2][3]  ·  ⚔ = battle abilities',W/2,H-76,{size:11,align:'center',color:'#ccc'});
+  }
   if(G.time<G.camoUntil) text(`🍃 Camouflaged ${Math.ceil(G.camoUntil-G.time)}s`,W/2,H-94,{size:14,bold:true,align:'center',color:'#7be07b'});
   // minimap
   drawMinimap(W-138,H-102,128,88);
