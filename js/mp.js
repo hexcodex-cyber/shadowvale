@@ -60,7 +60,8 @@ function drawChat(){
 function mpUpdate(dt){
   if(!netOn()) return;
   const p=G.player; if(G.mode!=='world' && G.mode!=='battle') return;
-  const data={zone:G.zone, x:Math.round(p.x*100)/100, y:Math.round(p.y*100)/100, dir:p.dir, lead:G.party[0]?G.party[0].sp:'', lvl:p.level, battle:G.mode==='battle'};
+  const data={zone:G.zone, x:Math.round(p.x*100)/100, y:Math.round(p.y*100)/100, dir:p.dir, lead:G.party[0]?G.party[0].sp:'', lvl:p.level, battle:G.mode==='battle',
+    ride:G.ride?{id:G.ride.id, type:G.ride.type, seat:G.ride.seat, driver:G.ride.driver, h:Math.round(G.ride.a*100)/100, du:G.ride.duid||null}:null};
   const j=JSON.stringify(data), now=performance.now();
   if(j!==MP.lastPresJSON || now-MP.lastBeat>20000){ MP.lastPresJSON=j; MP.lastBeat=now; NET.updatePresence(data); }
   // smooth remote players
@@ -74,8 +75,12 @@ function livePlayers(){ const out=[]; const now=Date.now(); for(const [uid,r] of
 function colorFor(uid){ let h=0; for(const c of uid) h=(h*31+c.charCodeAt(0))>>>0; return `hsl(${h%360},60%,45%)`; }
 function drawRemotePlayers(ox,oy){
   if(!netOn()) return;
-  for(const [uid,r] of livePlayers()){ if(r.zone!==G.zone) continue; const d=MP.remote[uid]; if(!d) continue;
+  const list=livePlayers().filter(([uid,r])=>r.zone===G.zone&&MP.remote[uid]);
+  list.forEach(([uid,r])=>{ if(r.ride&&r.ride.driver&&MOUNTS[r.ride.type]){ const d=MP.remote[uid]; drawMount2D(r.ride.type,d.x*TILE-ox+16,d.y*TILE-oy+22,r.ride.h||0,G.time); } });
+  for(const [uid,r] of list){ const d=MP.remote[uid];
     const px=d.x*TILE-ox, py=d.y*TILE-oy; if(px<-40||py<-40||px>W+40||py>H+40) continue;
+    if(r.ride&&MOUNTS[r.ride.type]){ drawRider(r.ride.type,r.ride.seat||0,px,py,r.ride.h||0,colorFor(uid),'#222'); const tag=`${r.name}${r.ride.driver?' 🏇':' 💺'}`; ctx.font='bold 11px Trebuchet MS'; const w=ctx.measureText(tag).width+10; const oy2=(r.ride.seat||0)*14;
+      rr(px+16-w/2,py-38-oy2,w,15,7,'rgba(0,0,0,.6)'); text(tag,px+16,py-27-oy2,{size:11,bold:true,align:'center',color:'#9ae6ff'}); continue; }
     if(r.lead && SPECIES[r.lead]){ const [fx,fy]=DIRS[r.dir]||[0,1]; drawCreature(r.lead,px+16-fx*22,py+22-fy*14,20,{t:G.time}); }
     drawPerson(px,py,colorFor(uid),'#222',r.dir||'down',d.moving?d.step:0,true);
     const tag=`${r.name} · Lv ${r.lvl||1}${r.battle?' ⚔':''}`; ctx.font='bold 11px Trebuchet MS'; const w=ctx.measureText(tag).width+10;

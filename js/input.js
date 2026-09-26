@@ -29,11 +29,13 @@ function onKey(e){
   if(c==='KeyP'){ G.menu='party'; G.menuSel=0; }
   if(c==='KeyQ'||c==='KeyJ') G.menu='quests';
   if(c==='KeyB'||c==='KeyI'){ G.menu='bag'; G.bagTab=G.bagTab||0; }
+  if(c==='KeyM'){ if(G.ride) dismount(); else { G.menu='mounts'; G.menuSel=0; } return; }
   if(c==='Digit1') useAbility('camo'); if(c==='Digit2') useAbility('medic'); if(c==='Digit3') useAbility('hearth');
 }
 function menuKey(c){
   const m=G.menu;
   if(m==='system'){ if(c==='Escape') G.menu=null; else systemKey(c); return; }
+  if(m==='mounts'||m==='stable'){ if(c==='Escape'||(m==='mounts'&&c==='KeyM')) G.menu=null; else mountMenuKey(c,m==='stable'); return; }
   if(isBack(c) && c!=='KeyX' || (m==='talents'&&c==='KeyT') || (m==='party'&&c==='KeyP') || (m==='quests'&&(c==='KeyQ'||c==='KeyJ')) || (m==='bag'&&(c==='KeyB'||c==='KeyI'))){ G.menu=null; return; }
   if(m==='talents'){ if(vert(c)) talentNav(vert(c)<0?'up':'down'); if(horiz(c)) talentNav(horiz(c)<0?'left':'right');
     if(c==='Enter'||c==='Space'||c==='KeyE'){ const t=TALENT_BY_ID[G.talentSel]; if(spendTalent(t)){ const [x,y]=talentNodePos(t); burst(x+32,y+32,TALENTS[t.bi].color); } }
@@ -89,6 +91,7 @@ function onClick(x,y){
     if(y>H-190 && x<W-390 && b.menu!=='main' && b.menu!=='learn' && !(b.menu==='swap'&&b.forced)){ b.menu='main'; b.sel=0; } return; }
   if(G.dialog){ const d=G.dialog; if(d.choice && d.i===d.lines.length-1){ d.choice.options.forEach((o,i)=>{ if(inR(x,y,W-300+i*120,H-116,110,28)){ d.sel=i; advanceDialog(); } }); return; } advanceDialog(); return; }
   const m=G.menu;
+  if(m==='mounts'||m==='stable'){ mountMenuClick(x,y,m==='stable'); return; }
   if(m==='system'){ systemOptions().forEach((o,i)=>{ if(inR(x,y,W/2-140,222+i*44,280,36)){ G.menuSel=i; systemKey('Enter'); } }); return; }
   if(m==='shop'){ let hit=false; SHOP_ITEMS.forEach((k,i)=>{ if(inR(x,y,220,160+i*62,520,54)){ hit=true; G.menuSel=i; menuKey('Enter'); } }); if(!hit && !inR(x,y,200,80,560,440)) G.menu=null; return; }
   if(m==='party'){ let hit=false; G.party.forEach((c,i)=>{ if(inR(x,y,80,92+i*78,W-160,70)){ hit=true; if(G.menuSel===i) menuKey('Enter'); else G.menuSel=i; } }); if(!hit && !inR(x,y,60,40,W-120,H-80)) G.menu=null; return; }
@@ -117,8 +120,8 @@ function frame(ts){
   else if(G.mode==='login') drawTitle(true);
   else if(G.mode==='starter') drawStarter();
   else if(G.mode==='battle') drawBattle();
-  else { drawWorld(); drawHUD();
-    if(G.menu==='system') drawSystemMenu(); else if(G.menu==='talents') drawTalents(); else if(G.menu==='party') drawParty(); else if(G.menu==='quests') drawQuests(); else if(G.menu==='bag') drawBag(); else if(G.menu==='shop') drawShop();
+  else { if(G.ride) drawFirstPerson(); else drawWorld(); drawHUD(); if(G.ride) drawRideHUD();
+    if(G.menu==='mounts') drawMountMenu('MOUNTS  [M]',false); else if(G.menu==='stable') drawMountMenu("HILDA'S STABLE",true); else if(G.menu==='system') drawSystemMenu(); else if(G.menu==='talents') drawTalents(); else if(G.menu==='party') drawParty(); else if(G.menu==='quests') drawQuests(); else if(G.menu==='bag') drawBag(); else if(G.menu==='shop') drawShop();
     drawDialog(); if(G.mode==='win') drawWin(); }
   if(G.menu!=='talents' && G.mode!=='login') drawLegend();
   drawParticles(); if(G.menu!=='talents') drawToasts();
@@ -134,7 +137,7 @@ window.addEventListener('load',()=>{
   window.addEventListener('keydown',e=>{ keys[e.code]=true; if(!e.repeat) onKey(e); else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
   window.addEventListener('keyup',e=>{ keys[e.code]=false; });
   window.addEventListener('blur',()=>{ keys={}; });
-  canvas.addEventListener('mousemove',e=>onMouse(e,false)); canvas.addEventListener('click',e=>onMouse(e,true));
+  canvas.addEventListener('mousemove',e=>{ if(e.buttons&1 && G.ride && G.ride.driver && !G.menu){ G.ride.a+=e.movementX*0.006; } onMouse(e,false); }); canvas.addEventListener('click',e=>onMouse(e,true));
   requestAnimationFrame(frame);
   window.__sv={MP, get G(){return G;}, set G(v){G=v;}, WORLD:()=>WORLD, startBattle, makeCreature, grantPlayerXP, addCreature, saveGame};
 });

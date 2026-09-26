@@ -157,7 +157,7 @@ const GUARDIANS = [
 ];
 
 // Collectables placed in the world (snapped to nearest walkable tile at load)
-const RELIC_SPOTS  = [[5,4],[39,3],[59,11],[47,5],[3,40],[60,28],[53,32],[20,39]];
+const RELIC_SPOTS  = [[5,4],[39,3],[59,11],[47,5],[3,40],[60,28],[40,31],[20,39]]; // [40,31] is a water-locked islet: reach it by Orca or flying mount
 const PETAL_SPOTS  = [[6,4],[20,3],[18,10],[33,10],[8,10]];
 const LAMB_SPOTS   = [[37,17],[6,35],[38,29]];
 
@@ -172,3 +172,21 @@ const NPCS = [
   {id:'tobin', name:'Farmer Tobin',    x:25, y:30, color:'#a0522d', hat:'#f4d03f'},
 ];
 const INN_SPOT = [17,20];
+NPCS.push({id:'hilda', name:'Stablemaster Hilda', x:10, y:29, color:'#6e4b2a', hat:'#c0392b'});
+NPCS.push({id:'marlo', name:'Dockhand Marlo',    x:34, y:33, color:'#2c5d8a', hat:'#f0f0f0'});
+
+// ===== Mounts (data-driven). terrain: land | air | water. speed = tiles/sec in first person =====
+const MOUNTS = {
+  horse:     {name:'Horse',           icon:'🐎', speed:4.2, turn:2.6, seats:2, terrain:'land',  eye:0.55, price:300,  source:'stable',
+              colors:{body:'#8b5a2b', mane:'#3b2412', accent:'#f5deb3'}, desc:'Fast on land. 2 seats.'},
+  dragonfly: {name:'Giant Dragonfly', icon:'🪰', speed:5.0, turn:3.0, seats:2, terrain:'air',   eye:1.9,  price:900,  source:'stable',
+              colors:{body:'#2fbf8f', wing:'rgba(200,240,255,0.45)', accent:'#9ff5ff'}, desc:'Flies over everything, very fast. 2 seats.'},
+  dragon:    {name:'Dragon',          icon:'🐉', speed:4.0, turn:2.2, seats:3, terrain:'air',   eye:2.6,  price:2500, source:'stable', unlockFlag:'g_thorn',
+              colors:{body:'#b3261e', mane:'#5a0f0a', accent:'#f4d03f'}, desc:'Flies over trees, walls and water. 3 seats. FREE after defeating Thornwarden, or 2500g.'},
+  orca:      {name:'Orca',            icon:'🐋', speed:3.6, turn:2.4, seats:2, terrain:'water', eye:0.3,  price:0,    source:'dock',
+              colors:{body:'#141414', belly:'#f4f4f4', accent:'#9ad0ff'}, desc:'Swims lakes and seas (reaches the lake islet relic). 2 seats. Free from Dockhand Marlo.'},
+};
+// First-person renderer tile config: h = wall height (tiles), floor = ground colour
+const FP_WALLS = { T:{h:1.35}, R:{h:1.7}, W:{h:1.5}, B:{h:1.9}, G:{h:1.5}, F:{h:0.45}, S:{h:0.55} };
+const FP_FLOOR = { '.':[95,174,74], ',':[62,140,48], 'f':[110,180,90], '=':[201,168,106], 's':[232,213,154], '~':[47,120,196], 'b':[139,90,43],
+                   'c':[99,76,61], 'r':[67,58,88], 'T':[70,140,60], 'R':[58,47,42], 'W':[43,36,56], 'G':[43,36,56], 'B':[95,174,74], 'F':[95,174,74], 'S':[95,174,74] };

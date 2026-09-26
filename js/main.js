@@ -16,7 +16,7 @@ const npcAt=(x,y)=>NPCS.find(n=>n.x===x&&n.y===y);
 const guardianAt=(x,y)=>GUARDIANS.find(g=>g.x===x&&g.y===y&&!G.flags['g_'+g.id]);
 const lambAt=(x,y)=>WORLD.lambs.findIndex(([lx,ly],i)=>lx===x&&ly===y&&!G.lambs.includes(i));
 function blocked(x,y){ const t=tileAt(x,y); if(SOLID.has(t)) return true; if(npcAt(x,y)||guardianAt(x,y)) return true; if(x===RIFT.x&&y===RIFT.y&&riftActive()) return true; if(lambAt(x,y)>=0) return true; return false; }
-function warpTo(x,y){ const p=G.player; p.tx=p.x=p.fromX=x; p.ty=p.y=p.fromY=y; p.moving=false; }
+function warpTo(x,y){ const p=G.player; p.tx=p.x=p.fromX=x; p.ty=p.y=p.fromY=y; p.moving=false; G.zone=zoneAt(x,y); }
 
 // ---------------- toasts / dialog ----------------
 function toast(t,color='#fff',dur=3.2){ toasts.push({t,color,life:dur}); if(toasts.length>5) toasts.shift(); }
@@ -59,6 +59,9 @@ const NPC_TALK = {
   pip(n){ if(talkSideQuest(n,sideQuest('collector'))) return; if(talkSideQuest(n,sideQuest('relics'))) return; showDialog(n.name,["My Bestiary and relic collection are complete thanks to you!"]); },
   kael(n){ if(!talkSideQuest(n,sideQuest('ranger'))) showDialog(n.name,["Keep training. Guardians hit hard — Thick Hide from the Beastmaster tree helps."]); },
   lyra(n){ if(!talkSideQuest(n,sideQuest('petals'))) showDialog(n.name,["Thanks to you the village is recovering. Moonpetal tea, anyone?"]); },
+  hilda(n){ showDialog(n.name,[G.flags.g_thorn&&!mountOwned('dragon')?"The Thornwarden is calmed — the dragons trust you now. Take one, free of charge!":"Horses, dragonflies, even dragons! Every mount has room for friends.","Press M anywhere to summon a mount you own."],()=>{ G.menu='stable'; G.menuSel=0; }); },
+  marlo(n){ if(!mountOwned('orca')){ showDialog(n.name,["Ahoy! This orca, Bubbles, has been itching to swim with a tamer.","She's yours. Stand next to water and press M to ride. There's a relic on a tiny islet out there only she can reach... or a flyer."],()=>{ G.mounts.orca=true; toast('🐋 Orca acquired! Press M next to water','#9ad0ff',4); saveGame(); }); }
+    else showDialog(n.name,["Bubbles misses you. Press M next to water to ride her."]); },
   tobin(n){ if(!talkSideQuest(n,sideQuest('lambs'))) showDialog(n.name,["The lambs are safe and happy. Baaa-rilliant!"]); },
 };
 
@@ -73,7 +76,9 @@ function onGuardianDefeated(g){
 
 // ---------------- interaction ----------------
 function interact(){
+  if(G.ride) return;
   const p=G.player, [dx,dy]=DIRS[p.dir], fx=p.tx+dx, fy=p.ty+dy;
+  if(tryBoardRemote(fx,fy)) return;
   const n=npcAt(fx,fy); if(n){ NPC_TALK[n.id](n); return; }
   const g=guardianAt(fx,fy);
   if(g){ if(!g.final && mainStage()<1){ showDialog(g.sp,['A mighty guardian slumbers here. Perhaps speak with Elder Maren first.']); return; }
@@ -87,14 +92,14 @@ function interact(){
   if(t==='~') showDialog('',['The water glitters. Something powerful stirs on the island.']);
 }
 
-function onStep(){
+function onStep(noEnc){
   const p=G.player, x=p.tx, y=p.ty;
   const z=zoneAt(x,y); if(z!==G.zone){ G.zone=z; toast(`— ${ZONE_NAMES[z]} —`,'#ffe9a8',2.5); }
   WORLD.relics.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.relics.includes(i)){ G.relics.push(i); const gold=grantGold(40); grantPlayerXP(25);
     toast(`✦ Glimmer Relic found! (${G.relics.length}/8) +${gold}g`,'#9ae6ff',4); burst(W/2,H/2,'#9ae6ff'); checkQuestToasts(); saveGame(); } });
   WORLD.petals.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.petals.includes(i)){ G.petals.push(i); toast(`❀ Moonpetal gathered (${G.petals.length}/5)`,'#8fd0ff'); burst(W/2,H/2,'#8fd0ff'); checkQuestToasts(); } });
   const t=tileAt(x,y);
-  if(ENCOUNTER_RATE[t] && G.time>=G.camoUntil && ZONES[z] && partyAlive().length){
+  if(!noEnc && !G.ride && ENCOUNTER_RATE[t] && G.time>=G.camoUntil && ZONES[z] && partyAlive().length){
     if(Math.random()<ENCOUNTER_RATE[t]){ const zz=ZONES[z]; const tot=zz.table.reduce((s,e)=>s+e[1],0); let r=Math.random()*tot, sp=zz.table[0][0];
       for(const [s,w] of zz.table){ if((r-=w)<0){sp=s;break;} }
       startBattle(makeCreature(sp,rand(zz.lv[0],zz.lv[1]))); }
@@ -110,7 +115,7 @@ function useAbility(id){
   G.cooldowns[id]=G.time+t.cd;
   if(id==='camo'){ G.camoUntil=G.time+25; toast('🍃 Camouflage! No wild encounters for 25s','#7be07b'); }
   if(id==='medic'){ healParty(0.5,true); toast('✚ Field Medic: party healed 50%','#ff9ad0'); }
-  if(id==='hearth'){ warpTo(INN_SPOT[0],INN_SPOT[1]); G.player.dir='down'; toast('🏠 Hearthstone: returned to Brightvale','#ffd84a'); }
+  if(id==='hearth'){ if(G.ride) dismount(true); warpTo(INN_SPOT[0],INN_SPOT[1]); G.player.dir='down'; toast('🏠 Hearthstone: returned to Brightvale','#ffd84a'); }
   burst(W/2,H/2,TALENTS[t.bi].color,30);
 }
 
@@ -120,6 +125,7 @@ function update(dt){
   G.time+=dt; toasts.forEach(t=>t.life-=dt); toasts=toasts.filter(t=>t.life>0); updParticles(dt);
   if(G.battle){ const b=G.battle; b.t+=dt; b.shake.p=Math.max(0,b.shake.p-dt); b.shake.e=Math.max(0,b.shake.e-dt); b.flash=Math.max(0,b.flash-dt); b.intro=Math.max(0,b.intro-dt*2); }
   if(G.mode!=='world' || G.dialog || G.menu) return;
+  if(G.ride){ updateRide(dt); return; }
   const p=G.player;
   if(p.moving){ p.prog+=dt*5*speedMult(); if(p.prog>=1){ p.moving=false; p.x=p.tx; p.y=p.ty; onStep(); } else { p.x=p.fromX+(p.tx-p.fromX)*p.prog; p.y=p.fromY+(p.ty-p.fromY)*p.prog; } }
   if(!p.moving && G.mode==='world'){
@@ -127,5 +133,5 @@ function update(dt){
     if(d) tryMove(d);
   }
 }
-function tryMove(d){ const p=G.player; if(p.moving||G.mode!=='world'||G.dialog||G.menu) return; p.dir=d; const [dx,dy]=DIRS[d];
+function tryMove(d){ const p=G.player; if(G.ride||p.moving||G.mode!=='world'||G.dialog||G.menu) return; p.dir=d; const [dx,dy]=DIRS[d];
   if(!blocked(p.tx+dx,p.ty+dy)){ p.fromX=p.tx; p.fromY=p.ty; p.tx+=dx; p.ty+=dy; p.moving=true; p.prog=0; } }

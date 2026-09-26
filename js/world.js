@@ -42,6 +42,7 @@ function buildWorld(){
   }
   for(let y=31;y<=37;y++) for(let x=49;x<=56;x++){ const dx=(x-52.5)/3.6, dy=(y-34)/2.8; if(dx*dx+dy*dy<1) m[y][x]='s'; }
   rect(36,34,14,1,'b');
+  set(40,31,'s'); // tiny water-locked islet (orca / flying mounts only)
   rect(33,27,8,3,','); rect(34,38,7,3,',');
   // ---- border ----
   for(let y=0;y<MAP_H;y++) for(let x=0;x<MAP_W;x++) if(x<2||y<2||x>=MAP_W-2||y>=MAP_H-2){ if(m[y][x]!=='R') m[y][x]='T'; }

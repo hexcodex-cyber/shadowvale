@@ -14,7 +14,7 @@ function newState(){
     dex:{seen:{}, caught:{}},
     relics:[], petals:[], lambs:[], shards:[],
     wildWins:0, quests:{}, flags:{}, cooldowns:{}, camoUntil:0,
-    zone:'town', time:0,
+    zone:'town', time:0, mounts:{}, ride:null,
   };
 }
 
@@ -100,6 +100,6 @@ function addCreature(c){
 // ---------- Save / load ----------
 const SAVE_KEY='shadowvale-save-v1';
 function saveKey(){ return SAVE_KEY + (window.NET && NET.user ? '-'+NET.user.uid : ''); }
-function saveGame(){ try{ if(G && G.party.length && G.mode!=='login' && G.mode!=='title' && G.mode!=='starter'){ const j=JSON.stringify(Object.assign({}, G, {mode:'world', dialog:null, battle:null, menu:null})); localStorage.setItem(saveKey(), j); if(window.NET && NET.user) NET.writeSave(j); } }catch(e){ console.warn('save failed',e); } }
+function saveGame(){ try{ if(G && G.party.length && G.mode!=='login' && G.mode!=='title' && G.mode!=='starter'){ const j=JSON.stringify(Object.assign({}, G, {mode:'world', dialog:null, battle:null, menu:null, ride:null})); localStorage.setItem(saveKey(), j); if(window.NET && NET.user) NET.writeSave(j); } }catch(e){ console.warn('save failed',e); } }
 function hasSave(){ try{ return !!localStorage.getItem(saveKey()); }catch(e){ return false; } }
-function loadGame(){ const d = JSON.parse(localStorage.getItem(saveKey())); G = Object.assign(newState(), d); G.mode='world'; G.player.moving=false; G.cooldowns={}; G.camoUntil=0; if(window.NET && NET.user) G.player.name=NET.user.name; }
+function loadGame(){ const d = JSON.parse(localStorage.getItem(saveKey())); G = Object.assign(newState(), d); G.mode='world'; G.player.moving=false; G.cooldowns={}; G.camoUntil=0; G.ride=null; G.mounts=G.mounts||{}; if(window.NET && NET.user) G.player.name=NET.user.name; }
