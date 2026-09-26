@@ -89,7 +89,7 @@ function drawDialog(){ const d=G.dialog; if(!d) return;
 function talentNodePos(t){ const px=40+t.bi*300; return [px+ (t.col===0.5? 105 : t.col===0? 50 : 160), 150+t.tier*130]; }
 function drawTalents(){
   ctx.fillStyle='rgba(8,6,16,.94)'; ctx.fillRect(0,0,W,H);
-  text('TALENTS',W/2,40,{size:28,bold:true,align:'center',color:'#ffd84a'});
+  text('TALENTS',W/2,40,{size:28,bold:true,align:'center',color:'#ffd84a'}); rr(W-60,6,54,30,8,'#3a3060','#c8a458'); text('✕',W-33,28,{size:18,bold:true,align:'center'});
   text(`${G.player.name} — Level ${G.player.level}   ·   Points available: ${G.player.points}   ·   Spent: ${totalSpent()}`,W/2,66,{size:15,align:'center',color:G.player.points?'#ffd84a':'#ccc'});
   TALENTS.forEach((b,bi)=>{ const px=40+bi*300; rr(px,82,280,420,10,'rgba(30,26,48,.9)',b.color,2);
     text(`${b.icon} ${b.branch}`,px+140,108,{size:19,bold:true,align:'center',color:b.color}); text(`${pointsInBranch(bi)} points · ${b.desc}`,px+140,126,{size:11,align:'center',color:'#bbb'});
@@ -176,6 +176,9 @@ function battleMenuOptions(){ const b=G.battle;
   if(b.menu==='learn') return [...b.learn.mon.moves, `Don't learn ${b.learn.move}`];
   return []; }
 const BATTLE_ITEMS=['soulstone','greater','potion','superpotion','revive'];
+function battleOptRect(i,menu){ const grid=menu==='fight'||menu==='learn', mx=W-380;
+  if(menu==='learn'&&i===4) return {x:mx,y:H-180+84,w:348,h:36};
+  return {x:mx+(grid?i%2:0)*178, y:H-180+(grid?Math.floor(i/2):i)*(grid?40:30), w:grid?170:348, h:grid?36:27}; }
 function drawBattle(){
   const b=G.battle, e=b.enemy, p=cur(b), t=G.time;
   const zone=b.guardian?b.guardian.zone:G.zone; const sky={forest:['#274d2f','#6fa86a'],cave:['#2a1410','#6b3a22'],lake:['#3a7bd5','#a8e0ff'],ruins:['#150a22','#4a2060'],meadow:['#6ec6ff','#c8f0a0'],town:['#6ec6ff','#c8f0a0']}[zone]||['#6ec6ff','#c8f0a0'];
@@ -205,9 +208,7 @@ function drawBattle(){
   const msgW = hasMenu? W-420 : W-80;
   wrap(b.msg,msgW,18).forEach((l,i)=>text(l,44,H-150+i*26,{size:18}));
   if(!hasMenu) text('▼ Space',W-50,H-36,{size:12,align:'right',color:'#ccc'});
-  if(hasMenu){ const mx=W-380; opts.forEach((o,i)=>{ const col=b.menu==='fight'||b.menu==='learn'?i%2:0, row=b.menu==='fight'||b.menu==='learn'?Math.floor(i/2):i;
-      let x=mx+col*178, y=H-180+row*(b.menu==='fight'||b.menu==='learn'?40:30), w=b.menu==='fight'||b.menu==='learn'?170:348, h=b.menu==='fight'||b.menu==='learn'?36:27;
-      if(b.menu==='learn' && i===4){ x=mx; y=H-180+2*40+4; w=348; }
+  if(hasMenu){ opts.forEach((o,i)=>{ const {x,y,w,h}=battleOptRect(i,b.menu);
       let fill='#2a2540', dis=false;
       if(b.menu==='fight'){ fill=TYPE_COLORS[MOVES[o].type]+'99'; }
       if(b.menu==='learn' && i<4) fill=TYPE_COLORS[MOVES[o].type]+'99';

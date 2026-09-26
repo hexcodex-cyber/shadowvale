@@ -76,8 +76,34 @@ function battleKey(c){
     else { const old=mon.moves[s]; mon.moves[s]=move; burst(W-230,380,'#8ff0ff'); front(b,[{text:`1, 2 and... Poof! ${mon.sp} forgot ${old}...`},{text:`✨ ...and ${mon.sp} learned ${move}!`}]); }
     nextStep(); }
 }
+const press=code=>onKey({code,preventDefault(){}});
+const inR=(x,y,rx,ry,rw,rh)=>x>=rx&&x<=rx+rw&&y>=ry&&y<=ry+rh;
+function onClick(x,y){
+  if(G.mode==='login') return;
+  if(G.mode==='title'){ const n=hasSave()?2:1; for(let i=0;i<n;i++) if(inR(x,y,W/2-120,400+i*56,240,44)){ G.menuSel=i; press('Enter'); } return; }
+  if(G.mode==='starter'){ for(let i=0;i<3;i++) if(inR(x,y,100+i*270,130,240,360)){ G.menuSel=i; press('Enter'); } return; }
+  if(G.mode==='win'){ press('Enter'); return; }
+  if(G.mode==='battle'){ const b=G.battle; if(!b) return; if(b.menu==='msg'){ press('Enter'); return; }
+    const n=battleMenuOptions().length; for(let i=0;i<n;i++){ const r=battleOptRect(i,b.menu); if(inR(x,y,r.x,r.y,r.w,r.h)){ b.sel=i; press('Enter'); return; } }
+    if(y>H-190 && x<W-390 && b.menu!=='main' && b.menu!=='learn' && !(b.menu==='swap'&&b.forced)){ b.menu='main'; b.sel=0; } return; }
+  if(G.dialog){ const d=G.dialog; if(d.choice && d.i===d.lines.length-1){ d.choice.options.forEach((o,i)=>{ if(inR(x,y,W-300+i*120,H-116,110,28)){ d.sel=i; advanceDialog(); } }); return; } advanceDialog(); return; }
+  const m=G.menu;
+  if(m==='system'){ systemOptions().forEach((o,i)=>{ if(inR(x,y,W/2-140,222+i*44,280,36)){ G.menuSel=i; systemKey('Enter'); } }); return; }
+  if(m==='shop'){ let hit=false; SHOP_ITEMS.forEach((k,i)=>{ if(inR(x,y,220,160+i*62,520,54)){ hit=true; G.menuSel=i; menuKey('Enter'); } }); if(!hit && !inR(x,y,200,80,560,440)) G.menu=null; return; }
+  if(m==='party'){ let hit=false; G.party.forEach((c,i)=>{ if(inR(x,y,80,92+i*78,W-160,70)){ hit=true; if(G.menuSel===i) menuKey('Enter'); else G.menuSel=i; } }); if(!hit && !inR(x,y,60,40,W-120,H-80)) G.menu=null; return; }
+  if(m==='bag'){ let hit=false; for(let i=0;i<3;i++) if(inR(x,y,90+i*170,56,160,32)){ G.bagTab=i; hit=true; } if(!hit && !inR(x,y,60,40,W-120,H-80)) G.menu=null; return; }
+  if(m==='quests'){ if(!inR(x,y,80,40,W-160,H-80)) G.menu=null; return; }
+  if(m==='talents'){ if(inR(x,y,W-60,6,54,30)) G.menu=null; return; }
+  if(m) return;
+  // world HUD buttons: hotbar abilities & menu shortcuts
+  const all=[...OVERWORLD_ABILITIES,'rally','unleash','snare']; const bw=54, bx=W/2-(all.length*bw+8)/2;
+  all.forEach((id,i)=>{ if(i<3 && inR(x,y,bx+i*bw+4,H-66,46,46)) useAbility(id); });
+  if(inR(x,y,18,96,234,20) && G.player.points>0){ G.menu='talents'; if(!G.talentSel) G.talentSel='ferocity'; }
+}
 function onMouse(e,click){
   const r=canvas.getBoundingClientRect(); const x=(e.clientX-r.left)*W/r.width, y=(e.clientY-r.top)*H/r.height; mouse={x,y};
+  if(click && G.menu!=='talents') { onClick(x,y); return; }
+  if(click && G.menu==='talents' && inR(x,y,W-60,6,54,30)){ G.menu=null; return; }
   if(G.menu==='talents'){ const t=Object.values(TALENT_BY_ID).find(t=>{ const [nx,ny]=talentNodePos(t); return x>=nx&&x<=nx+64&&y>=ny&&y<=ny+64; });
     if(t){ G.talentSel=t.id; if(click && spendTalent(t)) burst(x,y,TALENTS[t.bi].color); } }
 }

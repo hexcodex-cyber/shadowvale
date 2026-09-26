@@ -8,7 +8,7 @@ const netOn = ()=>!!(window.NET && NET.user && NET.online);
 const $ = id=>document.getElementById(id);
 
 // ---------- login overlay ----------
-function showLogin(show){ $('login').style.display = show?'flex':'none'; if(show) renderLogin(); }
+function showLogin(show){ $('login').style.display = show?'flex':'none'; if(show) renderLogin(); else { if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); if(typeof canvas!=='undefined' && canvas) canvas.focus({preventScroll:true}); window.focus(); } }
 function loginMsg(t,isErr=true){ const m=$('lg-msg'); m.textContent=t||''; m.className=isErr?'err':'ok'; }
 function renderLogin(){
   const net=window.NET, conf = net && net.configured;
@@ -35,7 +35,7 @@ async function afterLogin(){
   if(MP.loggingIn) return; MP.loggingIn=true;
   showLogin(false); loginMsg('');
   try{ const cloud=await NET.loadSave(); if(cloud) localStorage.setItem(saveKey(), cloud); }catch(e){ console.warn('cloud load failed', e.code||e); toast('Could not load cloud save — using local save','#ffb'); }
-  G.mode='title'; G.menuSel=0; G.player.name=NET.user.name; toast(`Signed in as ${NET.user.name}`,'#8fd0ff'); MP.loggingIn=false;
+  G.mode='title'; G.menuSel=0; G.player.name=NET.user.name; if(MP.toastedUid!==NET.user.uid){ MP.toastedUid=NET.user.uid; toasts=toasts.filter(t=>!t.t.startsWith('Signed in as')); toast(`Signed in as ${NET.user.name}`,'#8fd0ff'); } MP.loggingIn=false;
 }
 window.onNetChange = ()=>{ if(!G) return;
   if(G.mode==='login'){ if(NET.user) afterLogin(); else renderLogin(); } };
