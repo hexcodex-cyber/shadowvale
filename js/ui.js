@@ -11,6 +11,7 @@ function drawWorld(){
   const sparkle=(x,y,c,strong)=>{ const px=x*TILE-ox+16, py=y*TILE-oy+16, a=strong?0.9:0.35+0.25*Math.sin(t*4+x);
     ctx.globalAlpha=a; ctx.fillStyle=c; ctx.beginPath(); for(let i=0;i<8;i++){ const r=i%2?3:(strong?10:6)+Math.sin(t*5)*2, ang=i*Math.PI/4+t; ctx.lineTo(px+Math.cos(ang)*r,py+Math.sin(ang)*r);} ctx.fill(); ctx.globalAlpha=1; };
   WORLD.relics.forEach(([x,y],i)=>{ if(!G.relics.includes(i)) sparkle(x,y,'#9ae6ff',tracker); });
+  if(!G.flags.prismEgg && G.zone==='grove'){ const [ex,ey]=SECRET.egg, px=ex*TILE-ox+16, py=ey*TILE-oy+18+Math.sin(t*3)*2; ctx.fillStyle=`hsl(${(t*120)%360},90%,70%)`; ctx.beginPath(); ctx.ellipse(px,py,9,12,0,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); sparkle(ex,ey-0.3,`hsl(${(t*120+180)%360},90%,80%)`,true); }
   WORLD.petals.forEach(([x,y],i)=>{ if(!G.petals.includes(i) && G.quests.petals!=='done'){ const px=x*TILE-ox, py=y*TILE-oy; ctx.fillStyle=`rgba(120,200,255,${0.6+0.3*Math.sin(t*3+i)})`; for(let k=0;k<5;k++){ctx.beginPath();ctx.arc(px+16+Math.cos(k*1.26)*5,py+16+Math.sin(k*1.26)*5,4,0,7);ctx.fill();} ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(px+16,py+16,3,0,7); ctx.fill(); if(tracker) sparkle(x,y,'#8fd0ff',true);} });
   WORLD.lambs.forEach(([x,y],i)=>{ if(!G.lambs.includes(i)){ drawCreature('Fluffwool',x*TILE-ox+16,y*TILE-oy+16,26,{t,shadow:true}); if(tracker) sparkle(x,y-0.6,'#fff',true);} });
   GUARDIANS.forEach(g=>{ if(!G.flags['g_'+g.id]){ const px=g.x*TILE-ox+16, py=g.y*TILE-oy+10; drawCreature(g.sp,px,py,g.final?64:52,{t}); text('!',px,py-36,{size:20,bold:true,color:'#ff5',align:'center'}); } });
@@ -19,6 +20,7 @@ function drawWorld(){
     let mark=null; if(n.id==='elder' && mainStage()===0) mark='!'; else if(q){ if(!G.quests[q.id]) mark='!'; else if(q.progress(G)>=q.goal) mark='?'; }
     if(mark) text(mark,n.x*TILE-ox+16,n.y*TILE-oy-8,{size:22,bold:true,color:mark==='?'?'#4cd964':'#ffd84a',align:'center'}); });
   const p=G.player; if(G.time<G.camoUntil) ctx.globalAlpha=0.5+0.2*Math.sin(t*8);
+  if(G.flags.prismEgg){ rainbowTrail(p.x*TILE-ox+16,p.y*TILE-oy+28,p.moving); }
   drawPerson(p.x*TILE-ox,p.y*TILE-oy,'#2c3e50','#c0392b',p.dir,p.moving?p.prog:0,true); ctx.globalAlpha=1;
   if(G.zone==='cave'){ const g=ctx.createRadialGradient(p.x*TILE-ox+16,p.y*TILE-oy+16,80,p.x*TILE-ox+16,p.y*TILE-oy+16,420); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(10,0,0,.6)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
   if(G.zone==='ruins'){ ctx.fillStyle='rgba(60,0,60,.18)'; ctx.fillRect(0,0,W,H); }
@@ -29,7 +31,7 @@ function drawHUD(){
   const p=G.player;
   // player panel
   panel(10,10,250,112);
-  text(p.name.length>14?p.name.slice(0,13)+'…':p.name,22,34,{size:18,bold:true}); text(`Lv ${p.level}`,248,34,{size:18,bold:true,color:'#ffd84a',align:'right'});
+  text(p.name.length>14?p.name.slice(0,13)+'…':p.name,22,34,{size:18,bold:true,color:G.flags.prismEgg?rainbowColor(0):'#fff'}); text(`Lv ${p.level}`,248,34,{size:18,bold:true,color:'#ffd84a',align:'right'});
   bar(22,42,226,10,p.level>=MAX_PLAYER_LEVEL?1:p.xp/playerXpNeed(p.level),'#b26cff');
   text(p.level>=MAX_PLAYER_LEVEL?'MAX LEVEL':`XP ${p.xp}/${playerXpNeed(p.level)}`,135,66,{size:12,align:'center',color:'#ddd'});
   text(`💰 ${p.gold}g`,22,88,{size:15,color:'#ffd84a'}); text(`◈ ${G.shards.length}/3`,120,88,{size:15,color:'#ff9ad0'}); text(`✦ ${G.relics.length}/8`,190,88,{size:15,color:'#9ae6ff'});
@@ -70,7 +72,7 @@ function drawHUD(){
 let minimapCanvas=null;
 function drawMinimap(x,y,w,h){
   if(!minimapCanvas){ minimapCanvas=document.createElement('canvas'); minimapCanvas.width=MAP_W; minimapCanvas.height=MAP_H; const m=minimapCanvas.getContext('2d');
-    const col={'.':'#5fae4a',',':'#3d8c30','T':'#1f5a22','~':'#2f78c4','=':'#c9a86a','s':'#e8d59a','R':'#3a2f2a','c':'#6b5040','W':'#2b2438','r':'#4a3a60','G':'#ff3fbf','b':'#8b5a2b','f':'#7cc060','B':'#c04040','F':'#8b5a2b','S':'#a57a48'};
+    const col={'.':'#5fae4a',',':'#3d8c30','T':'#1f5a22','~':'#2f78c4','=':'#c9a86a','s':'#e8d59a','R':'#3a2f2a','c':'#6b5040','W':'#2b2438','r':'#4a3a60','G':'#ff3fbf','b':'#8b5a2b','f':'#7cc060','B':'#c04040','F':'#8b5a2b','S':'#a57a48','Y':'#1f5a22','p':'#1f5a22'};
     for(let j=0;j<MAP_H;j++) for(let i=0;i<MAP_W;i++){ m.fillStyle=col[WORLD.tiles[j][i]]||'#000'; m.fillRect(i,j,1,1); } }
   panel(x-4,y-4,w+8,h+8); ctx.imageSmoothingEnabled=false; ctx.drawImage(minimapCanvas,x,y,w,h);
   const sx=w/MAP_W, sy=h/MAP_H;
@@ -151,13 +153,17 @@ function drawBag(){
   panel(60,40,W-120,H-80,0.96); BAG_TABS.forEach((t,i)=>{ rr(90+i*170,56,160,32,8,G.bagTab===i?'#5a4a8a':'#2a2540','#c8a458'); text(t,170+i*170,78,{size:16,bold:true,align:'center'}); });
   if(G.bagTab===0){ Object.keys(ITEMS).forEach((k,i)=>{ const y=120+i*52; rr(90,y,W-180,44,6,'#221e34','#444'); text(`${ITEMS[k].name}  x${G.items[k]||0}`,110,y+20,{size:16,bold:true}); text(ITEMS[k].desc,110,y+38,{size:12,color:'#bbb'}); }); }
   if(G.bagTab===1){ text(`Caught ${Object.keys(G.dex.caught).length} / ${DEX_ORDER.length}  ·  Seen ${Object.keys(G.dex.seen).filter(s=>!SPECIES[s].boss).length}`,W/2,112,{size:14,align:'center',color:'#ccc'});
-    DEX_ORDER.forEach((sp,i)=>{ const x=90+(i%4)*200, y=124+Math.floor(i/4)*140, caught=G.dex.caught[sp], seen=G.dex.seen[sp]; rr(x,y,190,130,8,'#221e34',caught?'#ffd84a':'#444');
-      if(seen) drawCreature(sp,x+95,y+52,60,{t:G.time,alpha:caught?1:0.35}); else text('?',x+95,y+66,{size:40,align:'center',color:'#555'});
-      text(seen?sp:'???',x+95,y+104,{size:14,bold:true,align:'center',color:caught?'#fff':'#888'}); if(seen) text(SPECIES[sp].type+(caught?' · caught':' · seen'),x+95,y+120,{size:11,align:'center',color:TYPE_COLORS[SPECIES[sp].type]}); }); }
+    const cols=5, cw=156, chh=Math.min(130,Math.floor(440/Math.ceil(DEX_ORDER.length/cols))-6);
+    DEX_ORDER.forEach((sp,i)=>{ const x=86+(i%cols)*(cw+6), y=124+Math.floor(i/cols)*(chh+6), caught=G.dex.caught[sp], seen=G.dex.seen[sp], secret=SPECIES[sp].secret; rr(x,y,cw,chh,8,secret&&caught?'#2a1f44':'#221e34',secret&&caught?rainbowColor(i):caught?'#ffd84a':'#444',secret&&caught?3:2);
+      if(seen) drawCreature(sp,x+cw/2,y+chh*0.38,chh*0.5,{t:G.time,alpha:caught?1:0.35}); else text(secret?'✧':'?',x+cw/2,y+chh*0.5,{size:34,align:'center',color:secret?'#8a6fb0':'#555'});
+      text(seen?sp:'???',x+cw/2,y+chh-24,{size:13,bold:true,align:'center',color:caught?(secret?rainbowColor(1):'#fff'):'#888'});
+      if(seen) text(SPECIES[sp].type+(caught?' · caught':' · seen'),x+cw/2,y+chh-9,{size:10,align:'center',color:TYPE_COLORS[SPECIES[sp].type]}); else if(secret) text('Legend of the dreaming tree',x+cw/2,y+chh-9,{size:9,align:'center',color:'#8a6fb0'}); });
+    if(!G.dex.caught.Prismewl) text(SECRET.lore,W/2,H-76,{size:12,align:'center',color:'#b9a0e0'}); }
   if(G.bagTab===2){ let y=120; text(`Glimmer Relics: ${G.relics.length}/8`,100,y,{size:18,bold:true,color:'#9ae6ff'}); for(let i=0;i<8;i++){ const got=G.relics.includes(i); text(got?'✦':'✧',110+i*50,y+44,{size:34,color:got?'#9ae6ff':'#444'}); }
     y+=90; text(`Rune Shards: ${G.shards.length}/3`,100,y,{size:18,bold:true,color:'#ff9ad0'}); ['Verdant Shard','Ember Shard','Tidal Shard'].forEach((s,i)=>text(`${G.shards.includes(s)?'◈':'◇'} ${s}`,110+i*220,y+32,{size:16,color:G.shards.includes(s)?'#ff9ad0':'#555'}));
     y+=80; text(`Moonpetals: ${G.petals.length}/5    Lambs found: ${G.lambs.length}/3    Wild wins: ${G.wildWins}`,100,y,{size:16,color:'#ddd'});
-    y+=40; text(G.flags.crown?'👑 Ancient Crown equipped (+10% XP)':'👑 Ancient Crown — ???',100,y,{size:16,color:G.flags.crown?'#ffd84a':'#555'}); }
+    y+=36; text(G.flags.prismEgg?'🥚 Prismatic Egg — found in the Prism Grotto! (hatched into Prismewl)':'🥚 ??? — a unique treasure. Curiosity may reveal it.',100,y,{size:16,color:G.flags.prismEgg?rainbowColor(2):'#555'});
+    y+=36; text(G.flags.crown?'👑 Ancient Crown equipped (+10% XP)':'👑 Ancient Crown — ???',100,y,{size:16,color:G.flags.crown?'#ffd84a':'#555'}); }
   text('←/→ switch tab · Esc close',W/2,H-56,{size:13,align:'center',color:'#ccc'});
 }
 const SHOP_ITEMS=['soulstone','greater','potion','superpotion','revive'];

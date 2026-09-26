@@ -60,7 +60,7 @@ function drawChat(){
 function mpUpdate(dt){
   if(!netOn()) return;
   const p=G.player; if(G.mode!=='world' && G.mode!=='battle') return;
-  const data={zone:G.zone, x:Math.round(p.x*100)/100, y:Math.round(p.y*100)/100, dir:p.dir, lead:G.party[0]?G.party[0].sp:'', lvl:p.level, battle:G.mode==='battle',
+  const data={zone:G.zone, x:Math.round(p.x*100)/100, y:Math.round(p.y*100)/100, dir:p.dir, lead:G.party[0]?G.party[0].sp:'', lvl:p.level, battle:G.mode==='battle', rb:G.flags.prismEgg?1:0,
     ride:G.ride?{id:G.ride.id, type:G.ride.type, seat:G.ride.seat, driver:G.ride.driver, h:Math.round(G.ride.a*100)/100, du:G.ride.duid||null}:null};
   const j=JSON.stringify(data), now=performance.now();
   if(j!==MP.lastPresJSON || now-MP.lastBeat>20000){ MP.lastPresJSON=j; MP.lastBeat=now; NET.updatePresence(data); }
@@ -82,9 +82,10 @@ function drawRemotePlayers(ox,oy){
     if(r.ride&&MOUNTS[r.ride.type]){ drawRider(r.ride.type,r.ride.seat||0,px,py,r.ride.h||0,colorFor(uid),'#222'); const tag=`${r.name}${r.ride.driver?' 🏇':' 💺'}`; ctx.font='bold 11px Trebuchet MS'; const w=ctx.measureText(tag).width+10; const oy2=(r.ride.seat||0)*14;
       rr(px+16-w/2,py-38-oy2,w,15,7,'rgba(0,0,0,.6)'); text(tag,px+16,py-27-oy2,{size:11,bold:true,align:'center',color:'#9ae6ff'}); continue; }
     if(r.lead && SPECIES[r.lead]){ const [fx,fy]=DIRS[r.dir]||[0,1]; drawCreature(r.lead,px+16-fx*22,py+22-fy*14,20,{t:G.time}); }
+    if(r.rb) rainbowTrail(px+16,py+28,d.moving);
     drawPerson(px,py,colorFor(uid),'#222',r.dir||'down',d.moving?d.step:0,true);
     const tag=`${r.name} · Lv ${r.lvl||1}${r.battle?' ⚔':''}`; ctx.font='bold 11px Trebuchet MS'; const w=ctx.measureText(tag).width+10;
-    rr(px+16-w/2,py-20,w,15,7,'rgba(0,0,0,.6)'); text(tag,px+16,py-9,{size:11,bold:true,align:'center',color:'#9ae6ff'}); }
+    rr(px+16-w/2,py-20,w,15,7,'rgba(0,0,0,.6)',r.rb?rainbowColor(1):null,1.5); text(tag,px+16,py-9,{size:11,bold:true,align:'center',color:r.rb?rainbowColor(0):'#9ae6ff'}); }
 }
 function drawOnlinePanel(){
   if(!window.NET) return;

@@ -72,12 +72,17 @@ const SPECIES = {
               learn:[[1,'Flame Fang'],[1,'Rock Slide'],[1,'Warm Up'],[1,'Inferno']], desc:'Guardian of Ember Cave.'},
   Tidecaller:{type:'Water',  base:{hp:90,atk:70,def:65,spd:55}, catch:0, xp:170, boss:true, look:{body:'#1f5fbf',accent:'#8ff0ff',feat:'fin'},
               learn:[[1,'Tidal Slam'],[1,'Mist Veil'],[1,'Hydro Surge'],[1,'Headbutt']], desc:'Guardian of Mirror Lake.'},
+  Prismewl:  {type:'Arcane', base:{hp:60,atk:70,def:55,spd:75}, catch:0, xp:120, secret:true, look:{body:'rainbow',accent:'#ffffff',feat:'ears'},
+              learn:[[1,'Arcane Bolt'],[1,'Focus'],[8,'Mana Burst'],[8,'Leaf Storm'],[12,'Flame Fang'],[16,'Starfall']], desc:'Hatched from the Prismatic Egg. Its fur shifts through every colour. Only one exists.'},
   Riftmaw:   {type:'Arcane', base:{hp:95,atk:66,def:60,spd:50}, catch:0, xp:200, boss:true, look:{body:'#5b2a9a',accent:'#7ff0ff',feat:'wisp'},
               learn:[[1,'Mana Burst'],[1,'Nightmare'],[1,'Focus'],[1,'Rock Slide']], desc:'Multiplayer world boss from a tear in reality.'},
   Umbrax:    {type:'Shadow', base:{hp:100,atk:72,def:62,spd:60}, catch:0, xp:300, boss:true, look:{body:'#2a1840',accent:'#ff3fbf',feat:'dragon'},
               learn:[[1,'Void Rend'],[1,'Nightmare'],[1,'Terrify'],[1,'Corrode']], desc:'The Shadow Wyrm. Corrupter of Shadowvale.'},
 };
-const DEX_ORDER = ['Emberpup','Tidefin','Sproutle','Fluffwool','Glowmoth','Mossback','Shadekit','Cindermole','Pebblit','Rippletoad','Wispling'];
+const DEX_ORDER = ['Emberpup','Tidefin','Sproutle','Fluffwool','Glowmoth','Mossback','Shadekit','Cindermole','Pebblit','Rippletoad','Wispling','Prismewl'];
+// ===== Easter egg (secret) =====
+const SECRET = {egg:[27,4], door:[24,4], grove:{x:25,y:3,w:4,h:3}, name:'Prism Grotto', creature:'Prismewl', level:8,
+  lore:'Bestiary note: "Whisperwood keeps one colour it never shows the sun."'};
 
 const ZONES = {
   meadow: {name:'Sunny Meadow',  lv:[2,5],   table:[['Fluffwool',50],['Glowmoth',25],['Mossback',25]]},
@@ -189,4 +194,4 @@ const MOUNTS = {
 // First-person renderer tile config: h = wall height (tiles), floor = ground colour
 const FP_WALLS = { T:{h:1.35}, R:{h:1.7}, W:{h:1.5}, B:{h:1.9}, G:{h:1.5}, F:{h:0.45}, S:{h:0.55} };
 const FP_FLOOR = { '.':[95,174,74], ',':[62,140,48], 'f':[110,180,90], '=':[201,168,106], 's':[232,213,154], '~':[47,120,196], 'b':[139,90,43],
-                   'c':[99,76,61], 'r':[67,58,88], 'T':[70,140,60], 'R':[58,47,42], 'W':[43,36,56], 'G':[43,36,56], 'B':[95,174,74], 'F':[95,174,74], 'S':[95,174,74] };
+                   'c':[99,76,61], 'p':[150,90,200], 'Y':[70,140,60], 'r':[67,58,88], 'T':[70,140,60], 'R':[58,47,42], 'W':[43,36,56], 'G':[43,36,56], 'B':[95,174,74], 'F':[95,174,74], 'S':[95,174,74] };

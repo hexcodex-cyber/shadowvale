@@ -18,6 +18,8 @@ function buildWorld(){
   rect(4,9,7,3,',');
   rect(30,2,10,5,'.'); rect(33,3,4,3,'f'); // guardian glade
   rect(38,7,4,2,'=');
+  // secret: Prism Grotto hidden inside the tree block east of the west clearing; (24,4) is a walk-through 'dreaming' tree
+  rect(25,3,4,3,'p'); set(24,4,'Y');
   // ---- Ember Cave (north-east) ----
   rect(43,0,21,19,'R');
   rect(44,9,17,4,'c'); rect(44,13,3,6,'c'); rect(45,3,15,5,'c'); rect(51,7,3,2,'c');
@@ -70,6 +72,7 @@ function buildWorld(){
     {x:43,y:19,text:'NORTH: Ember Cave — home of Magmaw, the fire guardian.'},
     {x:33,y:25,text:'SOUTH-EAST: Mirror Lake. The guardian Tidecaller rests on the island.'},
     {x:14,y:12,text:'Whisperwood. Thornwarden guards the glade to the north-east.'},
+    {x:22,y:6,text:'Scratched into the post: "Count the trees east of here. One of them is dreaming in colour — and dreams let the curious pass."'},
   ];
   signs.forEach(s=>set(s.x,s.y,'S'));
   return {tiles:m, buildings, signs};
@@ -85,10 +88,11 @@ function nearestWalkable(tiles, x, y){
 
 function zoneAt(x,y){
   if(x>=47&&x<=59&&y>=19&&y<=25) return 'ruins';
+  if(x>=25&&x<=28&&y>=3&&y<=5) return 'grove';
   if(x>=42&&y<=18) return 'cave';
   if(y<=12) return 'forest';
   if(x>=3&&x<=21&&y>=13&&y<=30) return 'town';
   if(x>=32&&y>=26) return 'lake';
   return 'meadow';
 }
-const ZONE_NAMES = {town:'Brightvale', meadow:'Sunny Meadow', forest:'Whisperwood', cave:'Ember Cave', lake:'Mirror Lake', ruins:'Shadow Ruins'};
+const ZONE_NAMES = {grove:'Prism Grotto', town:'Brightvale', meadow:'Sunny Meadow', forest:'Whisperwood', cave:'Ember Cave', lake:'Mirror Lake', ruins:'Shadow Ruins'};

@@ -65,6 +65,12 @@ const NPC_TALK = {
   tobin(n){ if(!talkSideQuest(n,sideQuest('lambs'))) showDialog(n.name,["The lambs are safe and happy. Baaa-rilliant!"]); },
 };
 
+function findPrismaticEgg(){
+  G.flags.prismEgg=true; burst(W/2,H/2,'#ff6bd6',50); burst(W/2,H/2,'#6bffea',50); burst(W/2,H/2,'#fff36b',50);
+  toast('🥚 Secret found! Prismatic Egg','#ff9df0',6); toast('Achievement: Curiosity Rewarded','#ffd84a',6);
+  const c=makeCreature(SECRET.creature,SECRET.level); const where=addCreature(c); grantPlayerXP(150);
+  showDialog('Prismatic Egg',['Hidden among the dreaming trees, an egg shimmers with every colour at once...','It trembles... cracks... and HATCHES!',`Prismewl joins you${where==='storage'?' (sent to storage)':''}! It is the only one in the world.`,'Your name now glows with rainbow light, and a prismatic trail follows you — other tamers will see it too.']);
+  saveGame(); }
 function onGuardianDefeated(g){
   G.flags['g_'+g.id]=true;
   if(g.final){ G.flags.mainStage=3; G.mode='win'; burst(W/2,H/2,'#ff3fbf',80); saveGame(); return; }
@@ -97,6 +103,7 @@ function onStep(noEnc){
   const z=zoneAt(x,y); if(z!==G.zone){ G.zone=z; toast(`— ${ZONE_NAMES[z]} —`,'#ffe9a8',2.5); }
   WORLD.relics.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.relics.includes(i)){ G.relics.push(i); const gold=grantGold(40); grantPlayerXP(25);
     toast(`✦ Glimmer Relic found! (${G.relics.length}/8) +${gold}g`,'#9ae6ff',4); burst(W/2,H/2,'#9ae6ff'); checkQuestToasts(); saveGame(); } });
+  if(!G.flags.prismEgg && x===SECRET.egg[0] && y===SECRET.egg[1]) findPrismaticEgg();
   WORLD.petals.forEach(([rx,ry],i)=>{ if(rx===x&&ry===y&&!G.petals.includes(i)){ G.petals.push(i); toast(`❀ Moonpetal gathered (${G.petals.length}/5)`,'#8fd0ff'); burst(W/2,H/2,'#8fd0ff'); checkQuestToasts(); } });
   const t=tileAt(x,y);
   if(!noEnc && !G.ride && ENCOUNTER_RATE[t] && G.time>=G.camoUntil && ZONES[z] && partyAlive().length){

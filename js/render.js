@@ -19,7 +19,7 @@ function typeBadge(t,x,y){ rr(x,y,62,18,9,TYPE_COLORS[t]); text(t,x+31,y+13,{siz
 function drawCreature(sp,cx,cy,s,{flip=false,t=0,alpha=1,shadow=true}={}){
   const L=SPECIES[sp].look; ctx.save(); ctx.globalAlpha=alpha; ctx.translate(cx,cy+Math.sin(t*3)*s*0.03); if(flip) ctx.scale(-1,1);
   if(shadow){ ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0,s*0.48,s*0.42,s*0.1,0,0,7); ctx.fill(); }
-  const body=L.body, acc=L.accent, f=L.feat;
+  const body=L.body==='rainbow'?`hsl(${(performance.now()/8)%360},85%,62%)`:L.body, acc=L.accent, f=L.feat;
   const ell=(x,y,rx,ry,c,rot=0)=>{ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,7);ctx.fill();};
   const tri=(pts,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(pts[0],pts[1]);for(let i=2;i<pts.length;i+=2)ctx.lineTo(pts[i],pts[i+1]);ctx.closePath();ctx.fill();};
   if(f==='wings'){ ell(-s*.32,-s*.1,s*.28,s*.36,acc,-.5); ell(s*.32,-s*.1,s*.28,s*.36,acc,.5); ell(-s*.3,-s*.1,s*.18,s*.24,body,-.5); ell(s*.3,-s*.1,s*.18,s*.24,body,.5); }
@@ -45,6 +45,7 @@ function drawCreature(sp,cx,cy,s,{flip=false,t=0,alpha=1,shadow=true}={}){
   ell(-ex,ey,s*.07,s*.08,eyeC); ell(ex,ey,s*.07,s*.08,eyeC);
   ell(-ex+s*.015,ey+s*.01,s*.035,s*.045,'#111'); ell(ex+s*.015,ey+s*.01,s*.035,s*.045,'#111');
   ell(-ex+s*.03,ey-s*.02,s*.012,s*.012,'#fff'); ell(ex+s*.03,ey-s*.02,s*.012,s*.012,'#fff');
+  if(L.body==='rainbow'){ for(let i=0;i<5;i++){ const an=performance.now()/400+i*1.26; ctx.fillStyle=`hsla(${(i*72+performance.now()/5)%360},90%,70%,.8)`; ctx.beginPath(); ctx.arc(Math.cos(an)*s*.5,Math.sin(an)*s*.35,s*.04,0,7); ctx.fill(); } }
   if(SPECIES[sp].boss){ ctx.strokeStyle=acc; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-ex-s*.08,ey-s*.12); ctx.lineTo(-ex+s*.06,ey-s*.07); ctx.moveTo(ex+s*.08,ey-s*.12); ctx.lineTo(ex-s*.06,ey-s*.07); ctx.stroke(); }
   ctx.restore();
 }
@@ -79,6 +80,10 @@ function drawTile(c,x,y,px,py,t){
     case ',': ctx.fillStyle='#4a9a3a'; ctx.fillRect(px,py,TILE,TILE); ctx.fillStyle='#2f7a2a';
       for(let i=0;i<4;i++){ const bx=px+4+i*7, sway=Math.sin(t*2+x+i)*1.5; ctx.beginPath(); ctx.moveTo(bx,py+30); ctx.lineTo(bx+3+sway,py+8+(i%2)*4); ctx.lineTo(bx+6,py+30); ctx.fill(); }
       ctx.fillStyle='#3d8c30'; for(let i=0;i<3;i++){ const bx=px+8+i*8, sway=Math.sin(t*2+y+i)*1.5; ctx.beginPath(); ctx.moveTo(bx,py+22); ctx.lineTo(bx+3+sway,py+2+(i%2)*3); ctx.lineTo(bx+6,py+22); ctx.fill(); } break;
+    case 'Y': ctx.fillStyle=grass; ctx.fillRect(px,py,TILE,TILE); ctx.fillStyle='#5b3a1e'; ctx.fillRect(px+13,py+18,6,12);
+      ctx.fillStyle=`hsl(${130+Math.sin(t*1.3)*14},${42+Math.sin(t*2)*8}%,${31+Math.sin(t*1.7)*3}%)`; ctx.beginPath(); ctx.arc(px+16,py+13,13,0,7); ctx.fill();
+      ctx.fillStyle=`hsla(${(t*90)%360},90%,75%,${0.10+0.08*Math.sin(t*3)})`; ctx.beginPath(); ctx.arc(px+12,py+9,6,0,7); ctx.fill(); break;
+    case 'p': if(G.zone!=='grove'){ drawTile('T',x,y,px,py,t); break; } ctx.fillStyle=`hsl(${((x*40+y*25)+t*40)%360},55%,${38+((x+y)%2)*6}%)`; ctx.fillRect(px,py,TILE,TILE); ctx.fillStyle='rgba(255,255,255,.18)'; if(h%3===0){ ctx.beginPath(); ctx.arc(px+8+(h%16),py+8+((h>>4)%16),2+Math.sin(t*4+h)*1,0,7); ctx.fill(); } break;
     case 'T': ctx.fillStyle=grass; ctx.fillRect(px,py,TILE,TILE); ctx.fillStyle='#5b3a1e'; ctx.fillRect(px+13,py+18,6,12);
       ctx.fillStyle=(h%2)?'#2e7d32':'#2a6e2e'; ctx.beginPath(); ctx.arc(px+16,py+13,13,0,7); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.12)'; ctx.beginPath(); ctx.arc(px+12,py+9,6,0,7); ctx.fill(); break;
     case '~': ctx.fillStyle='#2f78c4'; ctx.fillRect(px,py,TILE,TILE); ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2; ctx.beginPath(); const o=Math.sin(t*1.5+x*0.7+y)*4; ctx.moveTo(px+4+o,py+12); ctx.quadraticCurveTo(px+10+o,py+8,px+16+o,py+12); ctx.moveTo(px+14-o,py+24); ctx.quadraticCurveTo(px+20-o,py+20,px+26-o,py+24); ctx.stroke(); break;
@@ -104,6 +109,10 @@ function drawBuilding(b,ox,oy){
   ctx.fillStyle='#8fd0ff'; ctx.fillRect(px+10,py+h-40,18,14); ctx.fillRect(px+w-28,py+h-40,18,14);
   text(b.name,px+w/2,py+h*0.4-2,{size:11,align:'center',bold:true});
 }
+// ---------- rainbow cosmetics (Prismatic Egg) ----------
+function rainbowColor(off=0){ return `hsl(${(performance.now()/6+off*50)%360},90%,68%)`; }
+function rainbowTrail(x,y,moving){ if(moving && Math.random()<0.6) particles.push({x:x+(Math.random()-0.5)*10,y:y+(Math.random()-0.5)*4,vx:(Math.random()-0.5)*20,vy:-20-Math.random()*20,life:0.8,color:rainbowColor(Math.random()*7)});
+  for(let i=0;i<3;i++){ const a=performance.now()/300+i*2.1; ctx.fillStyle=rainbowColor(i*2); ctx.globalAlpha=0.7; ctx.beginPath(); ctx.arc(x+Math.cos(a)*14,y-14+Math.sin(a)*6,2.5,0,7); ctx.fill(); } ctx.globalAlpha=1; }
 // ---------- particles ----------
 let particles=[];
 function burst(x,y,color,n=24){ for(let i=0;i<n;i++){ const a=Math.random()*7, v=40+Math.random()*120; particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,color}); } }

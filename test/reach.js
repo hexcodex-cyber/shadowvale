@@ -20,6 +20,7 @@ petals.forEach(([x,y],i)=>{ if(!s.has(x+','+y)) fails.push('petal '+i+' '+x+','+
 lambs.forEach(([x,y],i)=>{ if(!adj(s,x,y)) fails.push('lamb '+i); });
 Wd.signs.forEach(g=>{ if(!adj(s,g.x,g.y)) fails.push('sign '+g.x+','+g.y); });
 if(!adj(s,47,22)) fails.push('gate');
+if(!s.has(SECRET.egg[0]+','+SECRET.egg[1])) fails.push('secret egg');
 // encounter tiles per zone reachable
 const zc={}; s.forEach(k=>{ const [x,y]=k.split(',').map(Number); if(t[y][x]===','||t[y][x]==='c') { const z=zoneAt(x,y); zc[z]=(zc[z]||0)+1; } });
 console.log('reachable',s.size,'encounter tiles by zone',JSON.stringify(zc));
